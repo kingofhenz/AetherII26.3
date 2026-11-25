@@ -6,6 +6,7 @@ import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.world.level.material.FluidState;
+import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
@@ -18,6 +19,7 @@ import net.caffeinemc.mods.sodium.client.model.quad.ModelQuadView;
 public class DefaultFluidRendererMixin {
 
     @Shadow(remap = false)
+    @Final
     private int[] quadColors;
 
     @Inject(method = "updateQuad", at = @At("TAIL"), remap = false)
@@ -41,7 +43,7 @@ public class DefaultFluidRendererMixin {
                 ModelQuadView quadView = (ModelQuadView) quad;
 
                 for (int i = 0; i < 4; i++) {
-                    float y = quadView.getY(i);
+                    float y = quadView.sodium$getY(i);
                     boolean isUpperVertex = y > 0.005F;
                     float trueAlpha = isUpperVertex ? opacityStep * (offsetY + 1) : opacityStep * offsetY;
 
