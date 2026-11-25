@@ -1,0 +1,52 @@
+{
+  "schemaVersion": 1,
+  "id": "${mod_id}",
+  "version": "${version}",
+  "name": "${mod_name}",
+  "description": "${mod_description}",
+  "authors": ["bconlon", "Builderdog", "bagu_chan", "Blodhgarm", "Drullkus", "Hugo Payn", "Jaryt", "Jasper", "Katie 'Oz' Payn", "Mercedes", "Raptor", "reetamb", "RENREN", "sunsette"],
+  "contributors": [
+    "${mod_credits}"
+  ],
+  "contact": {
+    "homepage": "${mod_url}",
+    "sources": "https://github.com/The-Aether-Team/The-Aether-II",
+    "issues": "${mod_tracker}"
+  },
+  "license": "${mod_license}",
+  "icon": "${mod_id}.png",
+  "environment": "*",
+  "entrypoints": {
+    "main": [
+      "com.aetherteam.aetherii.AetherII"
+    ],
+    "client": [
+      "com.aetherteam.aetherii.client.AetherIIClient"
+    ],
+    "fabric-datagen": [
+      "com.aetherteam.aetherii.data.AetherIIData"
+    ],
+    "jei_mod_plugin": [
+      "com.aetherteam.aetherii.integration.jei.AetherIIJEIPlugin"
+    ],
+    "cumulus:menu_initializers": [
+      "com.aetherteam.aetherii.api.AetherIIMenus"
+    ]
+  },
+  "mixins": [
+    "${mod_id}.mixins.json"
+  ],
+  "accessWidener": "${mod_id}.accesswidener",
+  "depends": {
+    "fabricloader": ">=${loader_version}",
+    "minecraft": "~${minecraft_version}",
+    "java": ">=25",
+    "fabric-api": "*",
+    "forgeconfigapiport": "*"
+  },
+  "suggests": {
+    "cumulus_menus": "*",
+    "jei": "*",
+    "sodium": "*"
+  }
+}
