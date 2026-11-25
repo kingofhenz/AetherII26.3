@@ -1,5 +1,6 @@
 package com.aetherteam.aetherii.block.natural;
 
+import net.minecraft.world.level.block.BonemealSource;
 import com.aetherteam.aetherii.block.AetherIIBlocks;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
@@ -21,7 +22,6 @@ import net.minecraft.world.level.material.FluidState;
 import net.minecraft.world.level.material.Fluids;
 import net.minecraft.world.phys.shapes.CollisionContext;
 import net.minecraft.world.phys.shapes.VoxelShape;
-import net.neoforged.neoforge.common.CommonHooks;
 
 import javax.annotation.Nullable;
 
@@ -41,32 +41,31 @@ public class ArilumShootBlock extends Block  implements LiquidBlockContainer, Bo
 
     @Override
     public void randomTick(BlockState state, ServerLevel level, BlockPos pos, RandomSource random) {
-        if (CommonHooks.canCropGrow(level, pos, state, random.nextInt(60) == 0)) {
+        if ((random.nextInt(60) == 0)) {
             this.growPlant(level, random, pos, state);
-            CommonHooks.fireCropGrowPost(level, pos, state);
         }
     }
 
     @Override
-    public boolean isValidBonemealTarget(LevelReader level, BlockPos pos, BlockState state) {
+    public boolean isValidBonemealTarget(LevelReader level, BlockPos pos, BlockState state, BonemealSource source) {
         return true;
     }
 
     @Override
-    public boolean isBonemealSuccess(Level level, RandomSource random, BlockPos pos, BlockState state) {
+    public boolean isBonemealSuccess(Level level, RandomSource random, BlockPos pos, BlockState state, BonemealSource source) {
         return true;
     }
 
     @Override
-    public void performBonemeal(ServerLevel level, RandomSource random, BlockPos pos, BlockState state) {
+    public void performBonemeal(ServerLevel level, RandomSource random, BlockPos pos, BlockState state, BonemealSource source) {
         this.growPlant(level, random, pos, state);
     }
 
     private void growPlant(ServerLevel level, RandomSource random, BlockPos pos, BlockState state) {
         if (random.nextInt(3) == 0) {
-            level.setBlockAndUpdate(pos, AetherIIBlocks.BLOOMING_ARILUM.get().defaultBlockState());
+            level.setBlockAndUpdate(pos, AetherIIBlocks.BLOOMING_ARILUM.defaultBlockState());
         } else {
-            level.setBlockAndUpdate(pos, AetherIIBlocks.ARILUM.get().defaultBlockState());
+            level.setBlockAndUpdate(pos, AetherIIBlocks.ARILUM.defaultBlockState());
         }
     }
 

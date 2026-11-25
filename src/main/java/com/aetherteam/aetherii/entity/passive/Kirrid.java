@@ -1,5 +1,8 @@
 package com.aetherteam.aetherii.entity.passive;
 
+import net.minecraft.world.item.component.SwingAnimation;
+import net.minecraft.world.level.gameevent.GameEvent;
+import net.fabricmc.fabric.api.tag.convention.v2.ConventionalItemTags;
 import com.aetherteam.aetherii.AetherIITags;
 import com.aetherteam.aetherii.block.AetherIIBlocks;
 import com.aetherteam.aetherii.client.sound.AetherIISoundEvents;
@@ -55,20 +58,20 @@ import net.minecraft.world.level.storage.ValueInput;
 import net.minecraft.world.level.storage.ValueOutput;
 import net.minecraft.world.level.storage.loot.LootTable;
 import net.minecraft.world.phys.Vec3;
-import net.neoforged.neoforge.common.IShearable;
+import net.minecraft.world.phys.Vec3;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.*;
 import java.util.function.IntFunction;
 import java.util.stream.Collectors;
 
-public class Kirrid extends AetherAnimal implements Shearable, IShearable {
+public class Kirrid extends AetherAnimal implements Shearable {
     public static int JUMP_START_EVENT = 100;
     public static int RAM_START_EVENT = 101;
     public static int RAM_STOP_EVENT = 102;
     public static int EAT_START_EVENT = 103;
 
-    private static final EntityDataAccessor<Optional<KirridColor>> DATA_WOOL_COLOR_ID = SynchedEntityData.defineId(Kirrid.class, AetherIIDataSerializers.OPTIONAL_KIRRID_COLOR.get());
+    private static final EntityDataAccessor<Optional<KirridColor>> DATA_WOOL_COLOR_ID = SynchedEntityData.defineId(Kirrid.class, AetherIIDataSerializers.OPTIONAL_KIRRID_COLOR);
     private static final EntityDataAccessor<Boolean> DATA_HAS_PLATE_ID = SynchedEntityData.defineId(Kirrid.class, EntityDataSerializers.BOOLEAN);
     private static final EntityDataAccessor<Boolean> DATA_SHEARED_ID = SynchedEntityData.defineId(Kirrid.class, EntityDataSerializers.BOOLEAN);
 
@@ -239,13 +242,23 @@ public class Kirrid extends AetherAnimal implements Shearable, IShearable {
     @Override
     public InteractionResult mobInteract(Player player, InteractionHand hand) {
         ItemStack itemStack = player.getItemInHand(hand);
+        if (itemStack.is(ConventionalItemTags.SHEAR_TOOLS)) { // Vanilla shearing (NeoForge did this through IShearable)
+            if (this.level() instanceof ServerLevel serverLevel && this.readyForShearing()) {
+                this.shear(serverLevel, SoundSource.PLAYERS, itemStack);
+                this.gameEvent(GameEvent.SHEAR, player);
+                itemStack.hurtAndBreak(1, player, hand.asEquipmentSlot());
+                return InteractionResult.SUCCESS_SERVER;
+            } else {
+                return InteractionResult.CONSUME;
+            }
+        }
         PotionContents potionContents = itemStack.get(DataComponents.POTION_CONTENTS);
 
         if (itemStack.has(DataComponents.DYE)) {
             DyeColor dyeColor = itemStack.get(DataComponents.DYE);
             KirridColor kirridColor = KirridColor.KIRRID_COLOR_BY_DYE.get(dyeColor);
             if (this.getColor().isEmpty() || this.getColor().get() != kirridColor) {
-                player.swing(hand);
+                player.swing(hand, SwingAnimation.DEFAULT, false);
                 if (!player.level().isClientSide()) {
                     this.setColor(Optional.of(kirridColor));
                     if (!player.getAbilities().instabuild) {
@@ -255,11 +268,11 @@ public class Kirrid extends AetherAnimal implements Shearable, IShearable {
             }
         } else if (itemStack.is(AetherIIItems.WATER_VIAL) || (potionContents != null && potionContents.is(Potions.WATER))) {
             if (!this.getColor().isEmpty()) {
-                player.swing(hand);
+                player.swing(hand, SwingAnimation.DEFAULT, false);
                 if (!player.level().isClientSide()) {
                     this.setColor(Optional.empty());
                     if (!player.getAbilities().instabuild) {
-                        Item result = itemStack.is(AetherIIItems.WATER_VIAL) ? AetherIIItems.SCATTERGLASS_VIAL.get() : Items.GLASS_BOTTLE;
+                        Item result = itemStack.is(AetherIIItems.WATER_VIAL) ? AetherIIItems.SCATTERGLASS_VIAL : Items.GLASS_BOTTLE;
                         player.setItemInHand(hand, ItemUtils.createFilledResult(itemStack, player, new ItemStack(result)));
                     }
                 }
@@ -269,33 +282,12 @@ public class Kirrid extends AetherAnimal implements Shearable, IShearable {
     }
 
     @Override
-    public List<ItemStack> onSheared(@Nullable Player player, ItemStack item, Level level, BlockPos pos) {
-        level.playSound(null, this, AetherIISoundEvents.ENTITY_SHEEPUFF_SHEAR.get(), player == null ? SoundSource.BLOCKS : SoundSource.PLAYERS, 1.0F, 1.0F);
-        if (!level.isClientSide()) {
-            this.setSheared(true);
-            int i = 1;
-            i += this.getRandom().nextInt(3);
-
-            List<ItemStack> items = new ArrayList<>();
-            for (int j = 0; j < i; ++j) {
-                ItemLike itemLike = AetherIIBlocks.CLOUDWOOL.asItem();
-                if (this.getColor().isPresent()) {
-                    itemLike = KirridColor.CLOUDWOOL_BY_KIRRID_COLOR.get(this.getColor().get());
-                }
-                items.add(new ItemStack(itemLike));
-            }
-            return items;
-        }
-        return Collections.emptyList();
-    }
-
-    @Override
     public void shear(ServerLevel serverLevel, SoundSource soundSource, ItemStack stack) {
-        this.level().playSound(null, this, AetherIISoundEvents.ENTITY_SHEEPUFF_SHEAR.get(), soundSource, 1.0F, 1.0F);
+        this.level().playSound(null, this, AetherIISoundEvents.ENTITY_SHEEPUFF_SHEAR, soundSource, 1.0F, 1.0F);
         ResourceKey<LootTable> lootTable = AetherIILoot.SHEARING_HIGHFIELDS_KIRRID;
-        if (this.variantType == AetherIIEntityTypes.MAGNETIC_KIRRID.get()) {
+        if (this.variantType == AetherIIEntityTypes.MAGNETIC_KIRRID) {
             lootTable = AetherIILoot.SHEARING_MAGNETIC_KIRRID;
-        } else if (this.variantType == AetherIIEntityTypes.ARCTIC_KIRRID.get()) {
+        } else if (this.variantType == AetherIIEntityTypes.ARCTIC_KIRRID) {
             lootTable = AetherIILoot.SHEARING_ARCTIC_KIRRID;
         }
         this.dropFromShearingLootTable(serverLevel, lootTable, stack, (level, item) -> {
@@ -428,11 +420,6 @@ public class Kirrid extends AetherAnimal implements Shearable, IShearable {
     }
 
     @Override
-    public boolean isShearable(Player player, ItemStack item, Level world, BlockPos pos) {
-        return this.readyForShearing();
-    }
-
-    @Override
     public boolean readyForShearing() {
         return this.isAlive() && !this.isSheared() && !this.isBaby();
     }
@@ -462,7 +449,7 @@ public class Kirrid extends AetherAnimal implements Shearable, IShearable {
     }
 
     public static Optional<KirridColor> getRandomKirridColor(RandomSource random, Kirrid kirrid) {
-        if (kirrid.variantType == AetherIIEntityTypes.HIGHFIELDS_KIRRID.get()) {
+        if (kirrid.variantType == AetherIIEntityTypes.HIGHFIELDS_KIRRID) {
             int i = random.nextInt(100);
             if (i < 5) {
                 return Optional.of(KirridColor.WHITE);
@@ -473,7 +460,7 @@ public class Kirrid extends AetherAnimal implements Shearable, IShearable {
             }  else {
                 return random.nextInt(500) == 0 ? Optional.of(KirridColor.LIME) : Optional.empty();
             }
-        } else if (kirrid.variantType == AetherIIEntityTypes.MAGNETIC_KIRRID.get()) {
+        } else if (kirrid.variantType == AetherIIEntityTypes.MAGNETIC_KIRRID) {
             int i = random.nextInt(100);
             if (i < 5) {
                 return Optional.of(KirridColor.GRAY);
@@ -484,7 +471,7 @@ public class Kirrid extends AetherAnimal implements Shearable, IShearable {
             }  else {
                 return random.nextInt(500) == 0 ? Optional.of(KirridColor.PURPLE) : Optional.of(KirridColor.LIGHT_BLUE);
             }
-        } else if (kirrid.variantType == AetherIIEntityTypes.ARCTIC_KIRRID.get()) {
+        } else if (kirrid.variantType == AetherIIEntityTypes.ARCTIC_KIRRID) {
             int i = random.nextInt(100);
             if (i < 5) {
                 return Optional.of(KirridColor.BROWN);
@@ -524,29 +511,29 @@ public class Kirrid extends AetherAnimal implements Shearable, IShearable {
     @Nullable
     @Override
     protected SoundEvent getAmbientSound() {
-        return AetherIISoundEvents.ENTITY_KIRRID_AMBIENT.get();
+        return AetherIISoundEvents.ENTITY_KIRRID_AMBIENT;
     }
 
     @Nullable
     @Override
     protected SoundEvent getHurtSound(DamageSource damageSource) {
-        return AetherIISoundEvents.ENTITY_KIRRID_HURT.get();
+        return AetherIISoundEvents.ENTITY_KIRRID_HURT;
     }
 
     @Nullable
     @Override
     protected SoundEvent getDeathSound() {
-        return AetherIISoundEvents.ENTITY_KIRRID_DEATH.get();
+        return AetherIISoundEvents.ENTITY_KIRRID_DEATH;
     }
 
     @Override
     protected void playStepSound(BlockPos pos, BlockState state) {
-        this.playSound(AetherIISoundEvents.ENTITY_KIRRID_STEP.get(), 0.15F, 1.0F);
+        this.playSound(AetherIISoundEvents.ENTITY_KIRRID_STEP, 0.15F, 1.0F);
     }
 
     @Nullable
     protected SoundEvent getJumpSound() {
-        return AetherIISoundEvents.ENTITY_KIRRID_JUMP.get();
+        return AetherIISoundEvents.ENTITY_KIRRID_JUMP;
     }
 
     @Nullable

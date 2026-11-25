@@ -39,14 +39,14 @@ import net.minecraft.world.level.dimension.DimensionType;
 import net.minecraft.world.level.portal.TeleportTransition;
 import net.minecraft.world.level.storage.LevelData;
 import net.minecraft.world.phys.Vec3;
-import net.neoforged.neoforge.client.network.ClientPacketDistributor;
+import com.aetherteam.aetherii.network.AetherIIPackets;
 
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
-public class AetherIIPlayerAttachment {
+public class AetherIIPlayerAttachment extends com.aetherteam.aetherii.attachment.SyncedEntityAttachment {
     private static final FontDescription.Resource LOGOMARKS = new FontDescription.Resource(Identifier.fromNamespaceAndPath(AetherII.MODID, "logomarks"));
     private static final Style INFO = Style.EMPTY.withColor(0x56C1EF).withUnderlined(true).withClickEvent(new ClickEvent.ShowDialog(Holder.direct(getDialog()))).withHoverEvent(new HoverEvent.ShowText(Component.literal("Open Info Screen")));
     private static final Style PATREON = Style.EMPTY.withColor(16728653).withUnderlined(true).withClickEvent(new ClickEvent.OpenUrl(URI.create("https://www.patreon.com/TheAetherTeam"))).withHoverEvent(new HoverEvent.ShowText(Component.literal("https://www.patreon.com/TheAetherTeam")));
@@ -182,7 +182,7 @@ public class AetherIIPlayerAttachment {
                 this.removeStuckProjectileTime--;
                 if (this.removeStuckProjectileTime <= 0) {
                     this.getStuckProjectiles().removeLast();
-                    player.syncData(AetherIIDataAttachments.PLAYER);
+                    player.getAttachedOrCreate(AetherIIDataAttachments.PLAYER).markDirty();
                 }
             }
         }
@@ -216,7 +216,7 @@ public class AetherIIPlayerAttachment {
             sync = true;
         }
         if (sync) {
-            ClientPacketDistributor.sendToServer(new MovementDataPacket(isJumping, isMovingHorizontally, isMovingOverall));
+            AetherIIPackets.sendToServer(new MovementDataPacket(isJumping, isMovingHorizontally, isMovingOverall));
         }
     }
 
@@ -236,14 +236,14 @@ public class AetherIIPlayerAttachment {
      */
     private void givePortalItem(Player player) {
         if (this.canGetPortal()) {
-            player.addItem(new ItemStack(AetherIIItems.AETHER_PORTAL_FRAME.get()));
+            player.addItem(new ItemStack(AetherIIItems.AETHER_PORTAL_FRAME));
             this.setCanGetPortal(false);
         }
     }
 
     public void startInAether(Player player) {
         if (player instanceof ServerPlayer serverPlayer) {
-            var aetherIIPlayer = player.getData(AetherIIDataAttachments.PLAYER.get());
+            var aetherIIPlayer = player.getAttachedOrCreate(AetherIIDataAttachments.PLAYER);
             if (AetherIIConfig.COMMON.spawn_in_aether.get()) {
                 if (aetherIIPlayer.canSpawnInAether()) { // Checks if the player has been set to spawn in the Aether.
                     MinecraftServer server = serverPlayer.level().getServer();
@@ -273,11 +273,12 @@ public class AetherIIPlayerAttachment {
         EntityType<?> entityType = projectile.getType();
         if (projectile.is(AetherIITags.EntityTypes.STICKABLE_PROJECTILES)) {
             this.stuckProjectiles.addLast(entityType);
-            player.syncData(AetherIIDataAttachments.PLAYER);
+            player.getAttachedOrCreate(AetherIIDataAttachments.PLAYER).markDirty();
         }
     }
 
     public void setMovingHorizontally(boolean isMovingHorizontally) {
+        if (this.isMovingHorizontally != isMovingHorizontally) this.markDirty();
         this.isMovingHorizontally = isMovingHorizontally;
     }
 
@@ -289,6 +290,7 @@ public class AetherIIPlayerAttachment {
     }
 
     public void setMovingOverall(boolean isMoving) {
+        if (this.isMovingOverall != isMoving) this.markDirty();
         this.isMovingOverall = isMoving;
     }
 
@@ -300,6 +302,7 @@ public class AetherIIPlayerAttachment {
     }
 
     public void setJumping(boolean isJumping) {
+        if (this.isJumping != isJumping) this.markDirty();
         this.isJumping = isJumping;
     }
 

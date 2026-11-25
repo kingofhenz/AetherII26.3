@@ -1,9 +1,9 @@
 package com.aetherteam.aetherii.recipe.recipes.block;
 
 import com.aetherteam.aetherii.recipe.recipes.AetherIIRecipeTypes;
-import com.aetherteam.nitrogen.recipe.BlockPropertyPair;
-import com.aetherteam.nitrogen.recipe.BlockStateIngredient;
-import com.aetherteam.nitrogen.recipe.BlockStateRecipeUtil;
+import com.aetherteam.aetherii.nitrogen.recipe.BlockPropertyPair;
+import com.aetherteam.aetherii.nitrogen.recipe.BlockStateIngredient;
+import com.aetherteam.aetherii.nitrogen.recipe.BlockStateRecipeUtil;
 import com.mojang.datafixers.util.Either;
 import com.mojang.serialization.MapCodec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
@@ -24,7 +24,7 @@ public class AccessoryFreezableRecipe extends AbstractBiomeParameterRecipe {
     public static final RecipeSerializer<AccessoryFreezableRecipe> SERIALIZER = new RecipeSerializer<>(MAP_CODEC, STREAM_CODEC);
 
     public AccessoryFreezableRecipe(Optional<Either<ResourceKey<Biome>, TagKey<Biome>>> biome, BlockStateIngredient ingredient, BlockPropertyPair result, Optional<Identifier> function) {
-        super(AetherIIRecipeTypes.ACCESSORY_FREEZABLE.get(), biome, ingredient, result, function);
+        super(AetherIIRecipeTypes.ACCESSORY_FREEZABLE, biome, ingredient, result, function);
     }
 
     public AccessoryFreezableRecipe(BlockStateIngredient ingredient, BlockPropertyPair result, Optional<Identifier> function) {

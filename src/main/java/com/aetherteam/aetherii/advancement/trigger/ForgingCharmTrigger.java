@@ -1,12 +1,13 @@
 package com.aetherteam.aetherii.advancement.trigger;
 
+import net.minecraft.world.level.storage.loot.predicates.LootItemCondition;
+import net.minecraft.core.Holder;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
-import net.minecraft.advancements.Criterion;
-import net.minecraft.advancements.criterion.ContextAwarePredicate;
-import net.minecraft.advancements.criterion.EntityPredicate;
-import net.minecraft.advancements.criterion.ItemPredicate;
-import net.minecraft.advancements.criterion.SimpleCriterionTrigger;
+import net.minecraft.advancements.triggers.Criterion;
+import net.minecraft.advancements.predicates.entity.EntityPredicate;
+import net.minecraft.advancements.predicates.ItemPredicate;
+import net.minecraft.advancements.triggers.SimpleCriterionTrigger;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.item.ItemStack;
 
@@ -22,18 +23,18 @@ public class ForgingCharmTrigger extends SimpleCriterionTrigger<ForgingCharmTrig
         this.trigger(player, (instance) -> instance.test(stack));
     }
 
-    public record Instance(Optional<ContextAwarePredicate> player, Optional<ItemPredicate> item) implements SimpleInstance {
+    public record Instance(Optional<Holder<LootItemCondition>> player, Optional<ItemPredicate> item) implements SimpleInstance {
         public static final Codec<Instance> CODEC = RecordCodecBuilder.create(instance -> instance.group(
-                        EntityPredicate.ADVANCEMENT_CODEC.optionalFieldOf("player").forGetter(ForgingCharmTrigger.Instance::player),
+                        LootItemCondition.CODEC.optionalFieldOf("player").forGetter(ForgingCharmTrigger.Instance::player),
                         ItemPredicate.CODEC.optionalFieldOf("item").forGetter(ForgingCharmTrigger.Instance::item))
                 .apply(instance, ForgingCharmTrigger.Instance::new));
 
         public static Criterion<Instance> charm() {
-            return AetherIIAdvancementTriggers.FORGING_CHARM.get().createCriterion(new ForgingCharmTrigger.Instance(Optional.empty(), Optional.empty()));
+            return AetherIIAdvancementTriggers.FORGING_CHARM.createCriterion(new ForgingCharmTrigger.Instance(Optional.empty(), Optional.empty()));
         }
 
         public static Criterion<Instance> charmItem(ItemPredicate item) {
-            return AetherIIAdvancementTriggers.FORGING_CHARM.get().createCriterion(new ForgingCharmTrigger.Instance(Optional.empty(), Optional.of(item)));
+            return AetherIIAdvancementTriggers.FORGING_CHARM.createCriterion(new ForgingCharmTrigger.Instance(Optional.empty(), Optional.of(item)));
         }
 
         public boolean test(ItemStack stack) {

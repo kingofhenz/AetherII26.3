@@ -8,7 +8,7 @@ import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.resources.Identifier;
 import net.minecraft.world.entity.player.Player;
-import net.neoforged.neoforge.network.handling.IPayloadContext;
+import net.minecraft.server.level.ServerPlayer;
 
 public record SkiffSteeringPacket(int entityID, CloudSkiff.SteeringState steeringState) implements CustomPacketPayload {
     public static final Type<SkiffSteeringPacket> TYPE = new Type<>(Identifier.fromNamespaceAndPath(AetherII.MODID, "skiff_steering"));
@@ -24,9 +24,10 @@ public record SkiffSteeringPacket(int entityID, CloudSkiff.SteeringState steerin
         return TYPE;
     }
 
-    public static void execute(SkiffSteeringPacket payload, IPayloadContext context) {
-        Player sender = context.player();
-        if (sender.level().getServer() != null && sender.level().getEntity(payload.entityID()) instanceof CloudSkiff skiff && sender.getVehicle() != null && sender.getVehicle().equals(skiff)) {
+    public static void handleServer(SkiffSteeringPacket payload, ServerPlayer player) {
+        ServerPlayer sender = player;
+        if (sender.level().getServer() != null && sender.level().getEntity(payload.entityID()) instanceof CloudSkiff skiff
+                && skiff.getControllingPassenger() == sender) {
             skiff.setSteeringState(payload.steeringState());
         }
     }

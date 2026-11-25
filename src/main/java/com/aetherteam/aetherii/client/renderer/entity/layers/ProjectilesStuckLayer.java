@@ -38,7 +38,7 @@ public class ProjectilesStuckLayer<M extends PlayerModel> extends RenderLayer<Av
     @Override
     public void submit(PoseStack poseStack, SubmitNodeCollector submitNodeCollector, int i, AvatarRenderState avatarRenderState, float v, float v1) {
 
-        List<EntityType<?>> list = avatarRenderState.getRenderData(AetherIIRenderers.STUCK_PROJECTILES_KEY);
+        List<EntityType<?>> list = avatarRenderState.getData(AetherIIRenderers.STUCK_PROJECTILES_KEY);
         if (list != null && !list.isEmpty()) {
             RandomSource random = RandomSource.create(avatarRenderState.id);
             for (EntityType<?> type : list) {
@@ -77,11 +77,11 @@ public class ProjectilesStuckLayer<M extends PlayerModel> extends RenderLayer<Av
         float f = Mth.sqrt(x * x + z * z);
         float f1 = (float) (Math.atan2(x, z) * 180.0F / Math.PI);
         float f2 = (float) (Math.atan2(y, f) * 180.0F / Math.PI);
-        poseStack.mulPose(Axis.YP.rotationDegrees(f1 - 90.0F));
-        poseStack.mulPose(Axis.ZP.rotationDegrees(f2));
-        submitNodeCollector.submitModel(this.model, this.modelState, poseStack, this.model.renderType(texture), packedLight, OverlayTexture.NO_OVERLAY, avatarRenderState.outlineColor, null);
+        poseStack.rotateDegrees(Axis.YP, f1 - 90.0F);
+        poseStack.rotateDegrees(Axis.ZP, f2);
+        submitNodeCollector.submitModel(this.model, this.modelState, poseStack, this.model.renderType(texture), packedLight, OverlayTexture.NO_OVERLAY, avatarRenderState.outlineColor);
         if (emissive != null) {
-            submitNodeCollector.submitModel(this.model, this.modelState, poseStack, RenderTypes.eyes(emissive), packedLight, OverlayTexture.NO_OVERLAY, avatarRenderState.outlineColor, null);
+            submitNodeCollector.submitModel(this.model, this.modelState, poseStack, RenderTypes.eyes(emissive), packedLight, OverlayTexture.NO_OVERLAY, avatarRenderState.outlineColor);
         }
     }
 

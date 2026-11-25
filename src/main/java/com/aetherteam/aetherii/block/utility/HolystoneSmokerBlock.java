@@ -25,15 +25,9 @@ import net.minecraft.world.level.block.state.BlockState;
 import javax.annotation.Nullable;
 
 public class HolystoneSmokerBlock extends AbstractFurnaceBlock {
-    public static final MapCodec<HolystoneSmokerBlock> CODEC = simpleCodec(HolystoneSmokerBlock::new);
 
     public HolystoneSmokerBlock(Properties properties) {
         super(properties);
-    }
-
-    @Override
-    protected MapCodec<? extends AbstractFurnaceBlock> codec() {
-        return CODEC;
     }
 
     @Nullable
@@ -44,7 +38,7 @@ public class HolystoneSmokerBlock extends AbstractFurnaceBlock {
 
     @Nullable
     public <T extends BlockEntity> BlockEntityTicker<T> getTicker(Level level, BlockState state, BlockEntityType<T> blockEntityType) {
-        return createFurnaceTicker(level, blockEntityType, AetherIIBlockEntityTypes.HOLYSTONE_SMOKER.get());
+        return createFurnaceTicker(level, blockEntityType, AetherIIBlockEntityTypes.HOLYSTONE_SMOKER);
     }
 
     @Override

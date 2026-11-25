@@ -4,7 +4,6 @@ import com.aetherteam.aetherii.AetherII;
 import com.aetherteam.aetherii.block.AetherIIBlocks;
 import com.aetherteam.aetherii.block.utility.SkyrootBedBlock;
 import com.aetherteam.aetherii.blockentity.AetherIIBlockEntityTypes;
-import com.aetherteam.aetherii.blockentity.SkyrootBedBlockEntity;
 import com.aetherteam.aetherii.client.renderer.AetherIIModelLayers;
 import com.aetherteam.aetherii.client.renderer.blockentity.state.SkyrootBedRenderState;
 import com.mojang.blaze3d.vertex.PoseStack;
@@ -40,7 +39,7 @@ import java.util.function.Consumer;
  * [CODE COPY] - {@link net.minecraft.client.renderer.blockentity.BedRenderer}.<br><br>
  * Stripped down to only use what is necessary.
  */
-public class SkyrootBedRenderer implements BlockEntityRenderer<SkyrootBedBlockEntity, SkyrootBedRenderState> {
+public class SkyrootBedRenderer {
     private static final Identifier BED_LOCATION = Identifier.fromNamespaceAndPath(AetherII.MODID, "textures/entity/bed/skyroot/undyed.png");
     public static final Identifier[] DYED_BED_TEXTURES = Arrays.stream(DyeColor.values()).sorted(Comparator.comparingInt(DyeColor::getId)).map((dyeColor) -> Identifier.fromNamespaceAndPath(AetherII.MODID, "textures/entity/bed/skyroot/" + dyeColor.getName() + ".png")).toArray(Identifier[]::new);
     private final Model<Unit> headModel;
@@ -81,29 +80,6 @@ public class SkyrootBedRenderer implements BlockEntityRenderer<SkyrootBedBlockEn
         return LayerDefinition.create(meshDefinition, 128, 128);
     }
 
-    @Override
-    public SkyrootBedRenderState createRenderState() {
-        return new SkyrootBedRenderState();
-    }
-
-    @Override
-    public void extractRenderState(SkyrootBedBlockEntity blockEntity, SkyrootBedRenderState state, float p_446851_, Vec3 p_445788_, ModelFeatureRenderer.@Nullable CrumblingOverlay p_446944_) {
-        BlockEntityRenderer.super.extractRenderState(blockEntity, state, p_446851_, p_445788_, p_446944_);
-        boolean flag = blockEntity.getLevel() != null;
-        BlockState blockstate = flag ? blockEntity.getBlockState() : AetherIIBlocks.SKYROOT_BED.get().defaultBlockState().setValue(SkyrootBedBlock.FACING, Direction.SOUTH);
-        state.angle = blockstate.getValue(SkyrootBedBlock.FACING);
-        state.bedTexture = blockstate.getBlock() != AetherIIBlocks.SKYROOT_BED.get() ? DYED_BED_TEXTURES[blockEntity.getColor().getId()] : BED_LOCATION;
-        DoubleBlockCombiner.NeighborCombineResult<? extends SkyrootBedBlockEntity> combiner = DoubleBlockCombiner.combineWithNeigbour(AetherIIBlockEntityTypes.SKYROOT_BED.get(), SkyrootBedBlock::getBlockType, SkyrootBedBlock::getConnectedDirection, SkyrootBedBlock.FACING, blockstate, blockEntity.getLevel(), blockEntity.getBlockPos(), (levelAccessor, blockPos) -> false);
-        int i = combiner.apply(new BrightnessCombiner<>()).get(state.lightCoords);
-        state.lightCoords = i;
-        state.bedPart = blockstate.getValue(SkyrootBedBlock.PART);
-    }
-
-    @Override
-    public void submit(SkyrootBedRenderState skyRootBedRenderState, PoseStack poseStack, SubmitNodeCollector submitNodeCollector, CameraRenderState cameraRenderState) {
-        this.renderPiece(poseStack, submitNodeCollector, skyRootBedRenderState.bedPart == BedPart.HEAD ? this.headModel : this.footModel, skyRootBedRenderState.angle, skyRootBedRenderState.bedTexture, skyRootBedRenderState.lightCoords, OverlayTexture.NO_OVERLAY, false, skyRootBedRenderState.breakProgress, 0);
-    }
-
     public void renderInHand(PoseStack poseStack, SubmitNodeCollector bufferSource, int packedLight, int packedOverlay, Identifier location) {
         this.renderPiece(poseStack, bufferSource, this.headModel, Direction.SOUTH, location, packedLight, packedOverlay, false, null, 0);
         this.renderPiece(poseStack, bufferSource, this.footModel, Direction.SOUTH, location, packedLight, packedOverlay, true, null, 0);
@@ -114,15 +90,18 @@ public class SkyrootBedRenderer implements BlockEntityRenderer<SkyrootBedBlockEn
                              int p_451666_) {
         poseStack.pushPose();
         preparePose(poseStack, isFeet, direction);
-        submitNodeCollector.submitModel(model, Unit.INSTANCE, poseStack, RenderTypes.entityCutout(location), packedLight, packedOverlay, -1, null, p_451666_, crumblingOverlay);
+        submitNodeCollector.submitModel(model, Unit.INSTANCE, poseStack, RenderTypes.entityCutout(location), packedLight, packedOverlay, -1, null, p_451666_);
+        if (crumblingOverlay != null) {
+            submitNodeCollector.order(1).submitCrumblingOverlay(model, Unit.INSTANCE, poseStack, RenderTypes.entityCutout(location), packedLight, packedOverlay, -1, crumblingOverlay);
+        }
         poseStack.popPose();
     }
 
     private static void preparePose(PoseStack poseStack, boolean isFeet, Direction direction) {
         poseStack.translate(0.0F, 0.5625F, isFeet ? -1.0F : 0.0F);
-        poseStack.mulPose(Axis.XP.rotationDegrees(90.0F));
+        poseStack.rotateDegrees(Axis.XP, 90.0F);
         poseStack.translate(0.5F, 0.5F, 0.5F);
-        poseStack.mulPose(Axis.ZP.rotationDegrees(direction.toYRot()));
+        poseStack.rotateDegrees(Axis.ZP, direction.toYRot());
         poseStack.translate(-0.5F, -0.5F, -0.5F);
         poseStack.translate(1.0, -0.5F, 0.0F);
     }

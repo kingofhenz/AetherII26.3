@@ -1,5 +1,7 @@
 package com.aetherteam.aetherii.client.event.hooks;
 
+import com.aetherteam.aetherii.item.AttributeTooltipUtil;
+import com.aetherteam.aetherii.AetherIITags;
 import com.aetherteam.aetherii.attachment.AetherIIDataAttachments;
 import com.aetherteam.aetherii.block.AetherIIBlocks;
 import com.aetherteam.aetherii.client.gui.component.guidebook.GuidebookButton;
@@ -21,6 +23,7 @@ import com.aetherteam.aetherii.network.packet.serverbound.OutpostRespawnPacket;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.datafixers.util.Either;
 import net.minecraft.ChatFormatting;
+import net.minecraft.client.Camera;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.Button;
@@ -30,6 +33,7 @@ import net.minecraft.client.gui.screens.DeathScreen;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.inventory.CreativeModeInventoryScreen;
 import net.minecraft.client.gui.screens.inventory.InventoryScreen;
+import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.client.renderer.entity.state.EntityRenderState;
@@ -38,7 +42,9 @@ import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.FormattedText;
 import net.minecraft.tags.TagKey;
+import net.minecraft.util.ARGB;
 import net.minecraft.world.BossEvent;
+import net.minecraft.world.attribute.EnvironmentAttributes;
 import net.minecraft.world.entity.ai.attributes.Attribute;
 import net.minecraft.world.entity.ai.attributes.AttributeInstance;
 import net.minecraft.world.entity.ai.attributes.AttributeModifier;
@@ -50,8 +56,11 @@ import net.minecraft.world.item.TooltipFlag;
 import net.minecraft.world.item.component.TooltipDisplay;
 import net.minecraft.world.level.ItemLike;
 import net.minecraft.world.level.block.Blocks;
-import net.neoforged.neoforge.client.network.ClientPacketDistributor;
-import net.neoforged.neoforge.common.util.AttributeTooltipContext;
+import net.minecraft.world.level.material.FogType;
+import net.minecraft.world.phys.Vec3;
+import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
+import org.apache.commons.lang3.tuple.Triple;
+import org.joml.Vector3f;
 
 import javax.annotation.Nullable;
 import java.util.*;
@@ -78,7 +87,7 @@ public class RenderHooks {
             }
         }
         if (newScreen instanceof GuidebookEquipmentScreen) {
-            ClientPacketDistributor.sendToServer(new OpenGuidebookPacket(ItemStack.EMPTY));
+            ClientPlayNetworking.send(new OpenGuidebookPacket(ItemStack.EMPTY));
         }
         return newScreen;
     }
@@ -111,13 +120,13 @@ public class RenderHooks {
                         InventoryScreen inventory = new InventoryScreen(player);
                         InventoryScreenAccessor inventoryAccessor = (InventoryScreenAccessor) inventory;
                         handlerAccessor.aether_ii$setMouseGrabbed(false);
-                        minecraft.setScreen(inventory);
+                        minecraft.gui.setScreen(inventory);
                         inventoryAccessor.aether_ii$setXMouse(guidebook.getMouseX());
                         inventoryAccessor.aether_ii$setYMouse(guidebook.getMouseY());
                         player.inventoryMenu.setCarried(stack);
-                        ClientPacketDistributor.sendToServer(new OpenInventoryPacket(stack));
+                        ClientPlayNetworking.send(new OpenInventoryPacket(stack));
                     } else {
-                        ClientPacketDistributor.sendToServer(new OpenGuidebookPacket(stack));
+                        ClientPlayNetworking.send(new OpenGuidebookPacket(stack));
                     }
                 }
             }).pos((screen.width / 2) - 50, (screen.height / 2) + 101).size(100, 22));
@@ -143,9 +152,9 @@ public class RenderHooks {
 
     public static Button setupOutpostRespawnButton(Screen screen, List<GuiEventListener> listeners) {
         if (screen instanceof DeathScreen deathScreen) {
-            if (!Minecraft.getInstance().player.getData(AetherIIDataAttachments.OUTPOST_TRACKER).getCampfirePositions().isEmpty()) {
+            if (!Minecraft.getInstance().player.getAttachedOrCreate(AetherIIDataAttachments.OUTPOST_TRACKER).getCampfirePositions().isEmpty()) {
                 Button outpostRespawnButton = Button.builder(Component.translatable("gui.aether_ii.deathScreen.outpost_respawn"), (button) -> {
-                    ClientPacketDistributor.sendToServer(new OutpostRespawnPacket());
+                    ClientPlayNetworking.send(new OutpostRespawnPacket());
                     Minecraft.getInstance().player.respawn();
                     button.active = false;
                 }).bounds(deathScreen.width / 2 - 100, deathScreen.height / 4 + 96, 200, 20).build();
@@ -153,7 +162,7 @@ public class RenderHooks {
                 ((DeathScreenAccessor) deathScreen).aether$getExitButtons().add(outpostRespawnButton);
                 for (GuiEventListener listener : listeners) {
                     if (listener instanceof Button button) {
-                        if (button.getMessage().plainCopy().equals(Component.translatable("deathScreen.titleScreen"))) {
+                        if (button.getMessage().equals(Component.translatable("deathScreen.titleScreen"))) {
                             button.setPosition(button.getX(), button.getY() + 24);
                         }
                     }
@@ -166,6 +175,22 @@ public class RenderHooks {
 
     public static void addReinforcementTooltip(ItemStack stack, List<Component> components, Item.TooltipContext context, TooltipFlag flag) {
         stack.addToTooltip(AetherIIDataComponents.REINFORCEMENT_TIER, context, TooltipDisplay.DEFAULT, (component) -> components.add(1, component), flag);
+    }
+
+    public static void addAbilityAttributeTooltip(ItemStack itemStack, List<Component> tooltipLines, AttributeTooltipUtil.Context context) {
+        TagKey<Item> armorSet = itemStack.get(AetherIIDataComponents.ARMOR_SET);
+        if (armorSet != null) {
+            Player player = Minecraft.getInstance().player;
+            if (player != null && EquipmentUtil.getEquipment(player).stream().map(ItemStack::getItem).toList().contains(itemStack.getItem())) {
+                for (Map.Entry<Holder<Attribute>, AttributeInstance> entry : ((AttributeMapAccessor) player.getAttributes()).aether_ii$getAttributes().entrySet()) {
+                    for (AttributeModifier modifier : entry.getValue().getModifiers()) {
+                        if (modifier.id().getPath().startsWith("armor_set.ability.") && modifier.id().getPath().contains(armorSet.location().getPath().substring(armorSet.location().getPath().lastIndexOf('/') + 1))) {
+                            com.aetherteam.aetherii.item.AttributeTooltipUtil.addModifierTooltip(itemStack, tooltipLines::add, player, player.registryAccess(), entry.getKey(), modifier);
+                        }
+                    }
+                }
+            }
+        }
     }
 
     public static void addCharmTooltip(ItemStack itemStack, List<Either<FormattedText, TooltipComponent>> tooltipElements) {
@@ -213,7 +238,7 @@ public class RenderHooks {
     }
 
     public static void offsetNameTag(EntityRenderState entityRenderState, PoseStack poseStack) {
-        if (Boolean.TRUE.equals(entityRenderState.getRenderData(AetherIIRenderers.HAS_AERBUNNY))) {
+        if (Boolean.TRUE.equals(entityRenderState.getData(AetherIIRenderers.HAS_AERBUNNY))) {
             poseStack.translate(0.0, 0.3, 0.0);
         }
     }

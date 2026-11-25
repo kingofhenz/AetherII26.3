@@ -39,17 +39,11 @@ import net.minecraft.world.phys.BlockHitResult;
 import org.jspecify.annotations.Nullable;
 
 public class MusicBlock extends BaseEntityBlock {
-    public static final MapCodec<MusicBlock> CODEC = simpleCodec(MusicBlock::new);
     public static final BooleanProperty HAS_RECORD = BlockStateProperties.HAS_RECORD;
 
     public MusicBlock(BlockBehaviour.Properties properties) {
         super(properties);
         this.registerDefaultState(this.stateDefinition.any().setValue(HAS_RECORD, false));
-    }
-
-    @Override
-    protected MapCodec<MusicBlock> codec() {
-        return CODEC;
     }
 
     @Override
@@ -59,7 +53,7 @@ public class MusicBlock extends BaseEntityBlock {
 
     @Override
     public <T extends BlockEntity> @Nullable BlockEntityTicker<T> getTicker(Level level, BlockState blockState, BlockEntityType<T> type) {
-        return blockState.getValue(HAS_RECORD) ? createTickerHelper(type, AetherIIBlockEntityTypes.MUSIC_BLOCK.get(), MusicBlockEntity::tick) : null;
+        return blockState.getValue(HAS_RECORD) ? createTickerHelper(type, AetherIIBlockEntityTypes.MUSIC_BLOCK, MusicBlockEntity::tick) : null;
     }
 
     @Override

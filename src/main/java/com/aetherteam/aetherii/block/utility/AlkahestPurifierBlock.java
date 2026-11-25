@@ -32,7 +32,6 @@ import net.minecraft.world.phys.shapes.VoxelShape;
 import javax.annotation.Nullable;
 
 public class AlkahestPurifierBlock extends BaseEntityBlock {
-    public static final MapCodec<AltarBlock> CODEC = simpleCodec(AltarBlock::new);
     public static final EnumProperty<Direction> FACING = HorizontalDirectionalBlock.FACING;
     public static final IntegerProperty LEVEL = AetherIIBlockStateProperties.PURIFIER_LEVEL;
     protected static final VoxelShape BASE_Z = Block.box(0.0, 0.0, 1.0, 16.0, 2.0, 15.0);
@@ -56,11 +55,6 @@ public class AlkahestPurifierBlock extends BaseEntityBlock {
     }
 
     @Override
-    public MapCodec<AltarBlock> codec() {
-        return CODEC;
-    }
-
-    @Override
     public BlockEntity newBlockEntity(BlockPos pos, BlockState state) {
         return new AlkahestPurifierBlockEntity(pos, state);
     }
@@ -68,7 +62,7 @@ public class AlkahestPurifierBlock extends BaseEntityBlock {
     @Nullable
     @Override
     public <T extends BlockEntity> BlockEntityTicker<T> getTicker(Level level, BlockState state, BlockEntityType<T> blockEntityType) {
-        return createTicker(level, blockEntityType, AetherIIBlockEntityTypes.ALKAHEST_PURIFIER.get());
+        return createTicker(level, blockEntityType, AetherIIBlockEntityTypes.ALKAHEST_PURIFIER);
     }
 
     @Nullable

@@ -31,7 +31,7 @@ public class KirridWoolLayer extends RenderLayer<KirridRenderState, EntityModel<
     public void submit(PoseStack poseStack, SubmitNodeCollector submitNodeCollector, int packedLight, KirridRenderState kirrid, float v, float v1) {
         if (kirrid.isInvisible) {
             if (kirrid.appearsGlowing()) {
-                submitNodeCollector.submitModel(this.getParentModel(), kirrid, poseStack, RenderTypes.outline(this.getTexture(kirrid)), packedLight, LivingEntityRenderer.getOverlayCoords(kirrid, 0.0F), -16777216, null);
+                submitNodeCollector.submitModel(this.getParentModel(), kirrid, poseStack, RenderTypes.outline(this.getTexture(kirrid)), packedLight, LivingEntityRenderer.getOverlayCoords(kirrid, 0.0F), -16777216);
             }
         } else {
             kirrid.woolColor.ifPresent((woolColor) -> {
@@ -41,9 +41,9 @@ public class KirridWoolLayer extends RenderLayer<KirridRenderState, EntityModel<
     }
 
     private Identifier getTexture(KirridRenderState kirrid) {
-        if (kirrid.entityType == AetherIIEntityTypes.ARCTIC_KIRRID.get()) {
+        if (kirrid.entityType == AetherIIEntityTypes.ARCTIC_KIRRID) {
             return kirrid.isBaby ? ARCTIC_KIRRID_BABY_WOOL_TEXTURE : ARCTIC_KIRRID_WOOL_TEXTURE;
-        } else if (kirrid.entityType == AetherIIEntityTypes.MAGNETIC_KIRRID.get()) {
+        } else if (kirrid.entityType == AetherIIEntityTypes.MAGNETIC_KIRRID) {
             return kirrid.isBaby ? MAGNETIC_KIRRID_BABY_WOOL_TEXTURE : MAGNETIC_KIRRID_WOOL_TEXTURE;
         } else {
             return kirrid.isBaby ? HIGHFIELDS_KIRRID_BABY_WOOL_TEXTURE : HIGHFIELDS_KIRRID_WOOL_TEXTURE;

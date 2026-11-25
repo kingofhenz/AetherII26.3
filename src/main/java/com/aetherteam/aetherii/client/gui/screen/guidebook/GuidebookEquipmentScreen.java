@@ -5,14 +5,13 @@ import com.aetherteam.aetherii.attachment.AetherIIDataAttachments;
 import com.aetherteam.aetherii.client.gui.component.guidebook.GuidebookTab;
 import com.aetherteam.aetherii.client.renderer.entity.state.MoaRenderState;
 import com.aetherteam.aetherii.inventory.menu.GuidebookEquipmentMenu;
-import com.aetherteam.aetherii.inventory.menu.slot.CurrencySlot;
 import com.aetherteam.aetherii.inventory.menu.slot.SaddlebagSlot;
 import com.aetherteam.aetherii.item.AetherIIItems;
 import com.aetherteam.aetherii.item.miscellaneous.CurrencyItem;
 import com.aetherteam.aetherii.mixin.mixins.common.accessor.SlotAccessor;
 import com.aetherteam.aetherii.network.packet.serverbound.ClearAccessoriesPacket;
-import com.aetherteam.aetherii.network.packet.serverbound.ClearCurrencyPacket;
 import com.aetherteam.aetherii.network.packet.serverbound.ClearItemPacket;
+import com.aetherteam.aetherii.network.packet.serverbound.CurrencyAmountPacket;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.Renderable;
@@ -36,8 +35,7 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.ContainerInput;
 import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.ItemStack;
-import net.neoforged.neoforge.client.extensions.common.IClientItemExtensions;
-import net.neoforged.neoforge.client.network.ClientPacketDistributor;
+import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
 import org.joml.Quaternionf;
 import org.joml.Vector2i;
 import org.joml.Vector3f;
@@ -52,6 +50,7 @@ public class GuidebookEquipmentScreen extends AbstractContainerScreen<GuidebookE
     private static final Identifier GUIDEBOOK_EQUIPMENT_RIGHT_PAGE_LOCATION = Identifier.fromNamespaceAndPath(AetherII.MODID, "textures/gui/guidebook/equipment/guidebook_equipment_right.png");
     private static final Identifier GUIDEBOOK_EQUIPMENT_RIGHT_PAGE_CREATIVE_LOCATION = Identifier.fromNamespaceAndPath(AetherII.MODID, "textures/gui/guidebook/equipment/guidebook_equipment_right_creative.png");
     private static final SimpleContainer DESTROY_ITEM_CONTAINER = new SimpleContainer(1);
+    private static final SimpleContainer CURRENCY_CONTAINER = new SimpleContainer(1);
 
     private final Inventory playerInventory;
     private final Component craftingTitle = Component.translatable("container.crafting");
@@ -61,6 +60,7 @@ public class GuidebookEquipmentScreen extends AbstractContainerScreen<GuidebookE
     private float yMouse;
     @Nullable
     private Slot destroyItemSlot;
+    private Slot currencySlot;
 
     public GuidebookEquipmentScreen(GuidebookEquipmentMenu menu, Inventory playerInventory, Component title) {
         super(menu, playerInventory, title);
@@ -85,11 +85,11 @@ public class GuidebookEquipmentScreen extends AbstractContainerScreen<GuidebookE
     public void extractRenderState(GuiGraphicsExtractor guiGraphics, int mouseX, int mouseY, float partialTick) {
         super.extractRenderState(guiGraphics, mouseX, mouseY, partialTick);
 
-        if (this.getMinecraft().player != null) {
-            if (this.getMinecraft().player.isCreative() && this.destroyItemSlot == null) {
+        if (this.minecraft.player != null) {
+            if (this.minecraft.player.isCreative() && this.destroyItemSlot == null) {
                 this.destroyItemSlot = new Slot(DESTROY_ITEM_CONTAINER, 0, 127, 50);
                 this.getMenu().slots.add(this.destroyItemSlot);
-            } else if (!this.getMinecraft().player.isCreative() && this.destroyItemSlot != null) {
+            } else if (!this.minecraft.player.isCreative() && this.destroyItemSlot != null) {
                 this.getMenu().slots.remove(this.destroyItemSlot);
                 this.destroyItemSlot = null;
             }
@@ -99,48 +99,49 @@ public class GuidebookEquipmentScreen extends AbstractContainerScreen<GuidebookE
             guiGraphics.setTooltipForNextFrame(this.font, Component.translatable("inventory.binSlot"), mouseX, mouseY);
         }
 
+        if (this.currencySlot == null && this.getMenu().getMoa() == null) {
+            this.currencySlot = new Slot(CURRENCY_CONTAINER, 0, 64, 112);
+            this.getMenu().slots.add(this.currencySlot);
+        }
+        if (this.currencySlot != null) {
+            if (this.getMenu().getMoa() == null) {
+                if (Minecraft.getInstance().player != null) {
+                    var data = Minecraft.getInstance().player.getAttachedOrCreate(AetherIIDataAttachments.CURRENCY);
+                    if (this.isHovering(this.currencySlot.x, this.currencySlot.y, 16, 16, mouseX, mouseY)) {
+                        List<Component> componentList = new ArrayList<>();
+                        componentList.add(Component.translatable("gui.aether_ii.guidebook.equipment.pouch.tooltip.title"));
+                        componentList.add(Component.translatable("gui.aether_ii.guidebook.equipment.pouch.tooltip.description", data.getAmount()).withStyle(AetherIIItems.CURRENCY_NAME_COLOR));
+                        guiGraphics.setComponentTooltipForNextFrame(this.font, componentList, mouseX, mouseY);
+                    }
+                }
+            } else {
+                this.getMenu().slots.remove(this.currencySlot);
+                this.currencySlot = null;
+            }
+        }
+
         this.extractTooltip(guiGraphics, mouseX, mouseY);
 
         this.xMouse = (float) mouseX;
         this.yMouse = (float) mouseY;
     }
 
-    protected void renderSlotContents(GuiGraphicsExtractor graphics, ItemStack itemStack, Slot slot, @Nullable String itemCount) {
-        if (slot instanceof CurrencySlot currencySlot) {
-            int x = slot.x;
-            int y = slot.y;
-            int seed = slot.x + slot.y * this.imageWidth;
-
-            itemStack = AetherIIItems.GLINT_COIN.toStack();
-            if (currencySlot.getAmount() <= 99) {
-                itemCount = String.valueOf(currencySlot.getAmount());
-            } else {
-//            todo potentially try 1h, 1k, 1m, 1b formatting
-                itemCount = "99₊";
-            }
-            graphics.fakeItem(itemStack, x, y, seed);
-            var font = IClientItemExtensions.of(itemStack).getFont(itemStack, IClientItemExtensions.FontContext.ITEM_COUNT);
-            graphics.itemDecorations(font != null ? font : this.font, itemStack, x, y, itemCount);
-        } else {
-            super.renderSlotContents(graphics, itemStack, slot, itemCount);
-        }
-    }
-
     @Override
-    protected void extractTooltip(GuiGraphicsExtractor graphics, int mouseX, int mouseY) {
-        boolean superCall = true;
-        if (this.hoveredSlot instanceof CurrencySlot currencySlot) {
-            if (this.menu.getCarried().isEmpty() || this.getMenu().getCarried().getItem() instanceof CurrencyItem) {
-                List<Component> componentList = new ArrayList<>();
-                componentList.add(Component.translatable("gui.aether_ii.guidebook.equipment.pouch.tooltip.title"));
-                componentList.add(Component.translatable("gui.aether_ii.guidebook.equipment.pouch.tooltip.description", currencySlot.getAmount()).withStyle(AetherIIItems.CURRENCY_NAME_COLOR));
-                graphics.setComponentTooltipForNextFrame(this.font, componentList, mouseX, mouseY);
-                superCall = false;
+    protected void extractSlot(GuiGraphicsExtractor guiGraphics, Slot slot, int p_470717_, int p_470566_) {
+        if (slot == this.currencySlot) {
+            if (Minecraft.getInstance().player != null) {
+                var data = Minecraft.getInstance().player.getAttachedOrCreate(AetherIIDataAttachments.CURRENCY);
+                String text = data.getAmount() > 99 ? "99₊" : String.valueOf(data.getAmount());
+                int x = slot.x;
+                int y = slot.y;
+                guiGraphics.pose().pushMatrix();
+                guiGraphics.pose().translate(0.0F, 0.0F);
+                guiGraphics.fakeItem(new ItemStack(AetherIIItems.GLINT_COIN), x, y);
+                guiGraphics.itemDecorations(this.font, new ItemStack(AetherIIItems.GLINT_COIN), x, y, text);
+                guiGraphics.pose().popMatrix();
             }
         }
-        if (superCall) {
-            super.extractTooltip(graphics, mouseX, mouseY);
-        }
+        super.extractSlot(guiGraphics, slot, p_470717_, p_470566_);
     }
 
     @Override
@@ -262,25 +263,37 @@ public class GuidebookEquipmentScreen extends AbstractContainerScreen<GuidebookE
 
     @Override
     protected void slotClicked(@Nullable Slot slot, int slotId, int mouseButton, ContainerInput type) {
-        if (this.getMinecraft().player != null && this.getMinecraft().gameMode != null) {
+        if (this.minecraft.player != null && this.minecraft.gameMode != null) {
             boolean flag = type == ContainerInput.QUICK_MOVE;
             if (slot != null || type == ContainerInput.QUICK_CRAFT) {
-                if (slot == null || slot.mayPickup(this.getMinecraft().player)) {
+                if (slot == null || slot.mayPickup(this.minecraft.player)) {
                     if (slot == this.destroyItemSlot && this.destroyItemSlot != null && flag) {
-                        ClientPacketDistributor.sendToServer(new ClearAccessoriesPacket());
-                        ClientPacketDistributor.sendToServer(new ClearCurrencyPacket());
-                        Minecraft.getInstance().player.getData(AetherIIDataAttachments.CURRENCY).setAmount(0);
-                        for (int j = 0; j < this.getMinecraft().player.inventoryMenu.getItems().size(); ++j) {
-                            this.getMinecraft().gameMode.handleCreativeModeItemAdd(ItemStack.EMPTY, j);
+                        ClientPlayNetworking.send(new ClearAccessoriesPacket());
+                        for (int j = 0; j < this.minecraft.player.inventoryMenu.getItems().size(); ++j) {
+                            this.minecraft.gameMode.handleCreativeModeItemAdd(ItemStack.EMPTY, j);
                         }
                         return;
                     } else {
                         if (slot == this.destroyItemSlot && this.destroyItemSlot != null) {
                             this.getMenu().setCarried(ItemStack.EMPTY);
-                            ClientPacketDistributor.sendToServer(new ClearItemPacket());
+                            ClientPlayNetworking.send(new ClearItemPacket());
                             return;
                         }
                     }
+                }
+            }
+            if (slot != null) {
+                if (slot == this.currencySlot) {
+                    if (type == ContainerInput.PICKUP || type == ContainerInput.QUICK_CRAFT) {
+                        int button = mouseButton;
+                        if (type == ContainerInput.QUICK_CRAFT) {
+                            button = mouseButton == 5 ? 1 : mouseButton == 1 ? 0 : -1;
+                        }
+                        if (button == 0 || button == 1) {
+                            ClientPlayNetworking.send(new CurrencyAmountPacket(this.getMenu().containerId, button));
+                        }
+                    }
+                    return;
                 }
             }
             super.slotClicked(slot, slotId, mouseButton, type);
@@ -289,7 +302,7 @@ public class GuidebookEquipmentScreen extends AbstractContainerScreen<GuidebookE
 
     @Override
     protected boolean hasClickedOutside(double mouseX, double mouseY, int guiLeft, int guiTop) {
-        for (Renderable renderable : this.renderables) {
+        for (GuiEventListener renderable : this.children()) {
             if (renderable instanceof GuidebookTab guidebookTab) {
                 if (guidebookTab.isMouseOver(mouseX, mouseY)) {
                     return false;
@@ -339,6 +352,7 @@ public class GuidebookEquipmentScreen extends AbstractContainerScreen<GuidebookE
     @Override
     public void switchTab() {
         this.getMenu().slots.remove(this.destroyItemSlot);
+        this.getMenu().slots.remove(this.currencySlot);
     }
 
     @Override

@@ -1,11 +1,18 @@
 package com.aetherteam.aetherii.client.gui.screen.menu;
 
+import net.fabricmc.loader.api.FabricLoader;
+import net.minecraft.core.registries.BuiltInRegistries;
 import com.aetherteam.aetherii.AetherII;
+import com.aetherteam.aetherii.api.AetherIIMenus;
 import com.aetherteam.aetherii.client.gui.component.menu.AetherIIMenuButton;
 import com.aetherteam.aetherii.client.sound.AetherIISoundEvents;
 import com.aetherteam.aetherii.mixin.mixins.client.accessor.TitleScreenAccessor;
 import com.aetherteam.cumulus.CumulusConfig;
 import com.aetherteam.cumulus.client.gui.screen.DynamicMenuButton;
+import com.aetherteam.cumulus.mixin.mixins.client.accessor.GameRendererAccessor;
+import com.aetherteam.cumulus.mixin.mixins.client.accessor.GuiRendererAccessor;
+import net.minecraft.client.renderer.CubeMap;
+import net.minecraft.client.renderer.texture.CubeMapTexture;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.components.Button;
@@ -18,7 +25,6 @@ import net.minecraft.client.gui.screens.TitleScreen;
 import net.minecraft.network.chat.Component;
 import net.minecraft.sounds.Music;
 import net.minecraft.util.Util;
-import net.neoforged.neoforge.internal.BrandingControl;
 
 import java.net.URI;
 import java.util.HashMap;
@@ -27,7 +33,7 @@ import java.util.function.BiConsumer;
 import java.util.stream.Collectors;
 
 public class AetherIITitleScreen extends TitleScreen implements TitleScreenBehavior, CustomBranding {
-    public static final Music MENU = new Music(AetherIISoundEvents.MUSIC_MENU, 0, 0, true);
+    public static final Music MENU = new Music(BuiltInRegistries.SOUND_EVENT.wrapAsHolder(AetherIISoundEvents.MUSIC_MENU), 0, 0, true);
     private Map<Component, AbstractWidget> widgetsByName = new HashMap<>();
 
     public int buttonRows = 0;
@@ -48,6 +54,11 @@ public class AetherIITitleScreen extends TitleScreen implements TitleScreenBehav
         super.init();
         if (this.minecraft != null) {
             accessor.aetherII$setSplash(null);
+            if (this.minecraft.getTextureManager() != null) {
+                this.minecraft.getTextureManager().registerAndLoad(AetherIIMenus.AETHER_II_PANORAMA, new CubeMapTexture(AetherIIMenus.AETHER_II_PANORAMA));
+                CubeMap cubeMap = new CubeMap(AetherIIMenus.AETHER_II_PANORAMA);
+                ((GuiRendererAccessor) ((GameRendererAccessor) this.minecraft.gameRenderer).cumulus$getGuiRenderer()).cumulus$setCubeMap(cubeMap);
+            }
         }
         this.setupButtons();
         this.widgetsByName = this.children().stream().filter(e -> e instanceof AbstractWidget).map(e -> (AbstractWidget) e)
@@ -55,7 +66,7 @@ public class AetherIITitleScreen extends TitleScreen implements TitleScreenBehav
     }
 
     public void setupButtons() {
-        for (Renderable renderable : this.renderables) {
+        for (GuiEventListener renderable : this.children()) {
             if (renderable instanceof AbstractWidget abstractWidget) {
                 Component buttonText = abstractWidget.getMessage();
                 if (TitleScreenBehavior.isImageButton(buttonText)) {
@@ -90,23 +101,14 @@ public class AetherIITitleScreen extends TitleScreen implements TitleScreenBehav
         TitleScreenBehavior.super.handleImageButtons(this, xOffset);
         TitleScreenBehavior.super.handleEssentialButtonsForLeftMenu(this);
 
-        guiGraphics.text(this.font, "The Aether II 26.1.2-ALPHA.4.2", 2, this.height - 10, 0xFFFF7575);
+        guiGraphics.text(this.font, "The Aether II " + FabricLoader.getInstance().getModContainer(AetherII.MODID).orElseThrow().getMetadata().getVersion().getFriendlyString(), 2, this.height - 10, 0xFFFF7575);
     }
 
     @Override
-    public boolean forEachLineBranding(boolean includeMC, boolean reverse, BiConsumer<Integer, String> lineConsumer, GuiGraphicsExtractor guiGraphics, int i) {
-        BrandingControl.forEachLine(true, true, (brandingLine, branding) ->
-                guiGraphics.text(font, branding, this.width - font.width(branding) - 1, this.height - (10 + (brandingLine + 1) * (font.lineHeight + 1)), 16777215 | i)
-        );
-        return true;
-    }
-
-    @Override
-    public boolean forEachAboveCopyrightLineBranding(BiConsumer<Integer, String> lineConsumer, GuiGraphicsExtractor guiGraphics, int i) {
-        BrandingControl.forEachAboveCopyrightLine((brandingLine, branding) ->
-                guiGraphics.text(font, branding, 1, this.height - (brandingLine + 1) * (font.lineHeight + 1), 16777215 | i)
-        );
-        return true;
+    public void drawVersionBranding(GuiGraphicsExtractor graphics, String minecraftVersion, int color) {
+        String loader = "Fabric " + FabricLoader.getInstance().getModContainer("fabricloader").orElseThrow().getMetadata().getVersion().getFriendlyString();
+        graphics.text(this.font, minecraftVersion, this.width - this.font.width(minecraftVersion) - 1, this.height - 20, color);
+        graphics.text(this.font, loader, this.width - this.font.width(loader) - 1, this.height - 30, color);
     }
 
     // Fixes realm icons rendering in the aether menu

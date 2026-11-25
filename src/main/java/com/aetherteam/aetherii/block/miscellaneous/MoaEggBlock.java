@@ -49,7 +49,6 @@ import net.minecraft.world.phys.shapes.CollisionContext;
 import net.minecraft.world.phys.shapes.VoxelShape;
 
 public class MoaEggBlock extends BaseEntityBlock {
-    public static final MapCodec<MoaEggBlock> CODEC = simpleCodec(MoaEggBlock::new);
 
     public static final EnumProperty<Moa.KeratinColor> KERATIN = EnumProperty.create("keratin", Moa.KeratinColor.class);
     public static final EnumProperty<Moa.EyeColor> EYES = EnumProperty.create("eyes", Moa.EyeColor.class);
@@ -66,11 +65,6 @@ public class MoaEggBlock extends BaseEntityBlock {
     public MoaEggBlock(BlockBehaviour.Properties properties) {
         super(properties);
         this.registerDefaultState(this.stateDefinition.any().setValue(HATCH, 0).setValue(KERATIN, Moa.KeratinColor.GRAY).setValue(EYES, Moa.EyeColor.BLUE).setValue(FEATHERS, Moa.FeatherColor.LIGHT_BLUE).setValue(FEATHER_SHAPE, Moa.FeatherShape.CURVED).setValue(WILD, false));
-    }
-
-    @Override
-    protected MapCodec<? extends BaseEntityBlock> codec() {
-        return CODEC;
     }
 
     @Override
@@ -94,18 +88,18 @@ public class MoaEggBlock extends BaseEntityBlock {
     @Override
     public void tick(BlockState state, ServerLevel level, BlockPos pos, RandomSource random) {
         if (!this.isReadyToHatch(state)) {
-            level.playSound(null, pos, AetherIISoundEvents.BLOCK_MOA_EGG_CRACK.get(), SoundSource.BLOCKS, 0.7F, 0.9F + random.nextFloat() * 0.2F);
+            level.playSound(null, pos, AetherIISoundEvents.BLOCK_MOA_EGG_CRACK, SoundSource.BLOCKS, 0.7F, 0.9F + random.nextFloat() * 0.2F);
             level.setBlock(pos, state.setValue(HATCH, this.getHatchLevel(state) + 1), 2);
         } else {
-            level.playSound(null, pos, AetherIISoundEvents.BLOCK_MOA_EGG_HATCH.get(), SoundSource.BLOCKS, 0.7F, 0.9F + random.nextFloat() * 0.2F);
+            level.playSound(null, pos, AetherIISoundEvents.BLOCK_MOA_EGG_HATCH, SoundSource.BLOCKS, 0.7F, 0.9F + random.nextFloat() * 0.2F);
             final boolean isWild = state.getValue(WILD);
-            Optional<Player> owner = isWild? Optional.empty() : level.getBlockEntity(pos, AetherIIBlockEntityTypes.MOA_EGG.get())
+            Optional<Player> owner = isWild? Optional.empty() : level.getBlockEntity(pos, AetherIIBlockEntityTypes.MOA_EGG)
                     .flatMap(blockentity -> Optional.ofNullable(blockentity.getPlacedBy()))
                     .map(entityreference -> entityreference.getEntity(level, Player.class));
             level.destroyBlock(pos, false);
-            Moa moa = AetherIIEntityTypes.MOA.get().create(level, EntitySpawnReason.BREEDING);
+            Moa moa = AetherIIEntityTypes.MOA.create(level, EntitySpawnReason.BREEDING);
             if (moa != null) {
-                Vec3 vec3 = pos.getCenter();
+                Vec3 vec3 = Vec3.atCenterOf(pos);
                 moa.setBaby(true);
                 if (!isWild) {
                     moa.setPlayerGrown(true);
@@ -121,7 +115,7 @@ public class MoaEggBlock extends BaseEntityBlock {
                 level.addFreshEntity(moa);
                 Player player = level.getNearestPlayer(pos.getX(), pos.getY(), pos.getZ(), 24, false);
                 if (player instanceof ServerPlayer serverPlayer) {
-                    AetherIIAdvancementTriggers.INCUBATION.get().trigger(serverPlayer, moa);
+                    AetherIIAdvancementTriggers.INCUBATION.trigger(serverPlayer, moa);
                 }
             }
         }
@@ -145,7 +139,7 @@ public class MoaEggBlock extends BaseEntityBlock {
         super.setPlacedBy(level, pos, state, placer, stack);
 
         if (placer instanceof Player player) {
-            level.getBlockEntity(pos, AetherIIBlockEntityTypes.MOA_EGG.get()).ifPresent(blockentity -> blockentity.setPlacedBy(player));
+            level.getBlockEntity(pos, AetherIIBlockEntityTypes.MOA_EGG).ifPresent(blockentity -> blockentity.setPlacedBy(player));
         }
     }
 
@@ -160,8 +154,8 @@ public class MoaEggBlock extends BaseEntityBlock {
     }
 
     @Override
-    public ItemStack getCloneItemStack(LevelReader level, BlockPos pos, BlockState state, boolean includeData, Player player) {
-        ItemStack moaEggItem = super.getCloneItemStack(level, pos, state, includeData, player);
+    protected ItemStack getCloneItemStack(LevelReader level, BlockPos pos, BlockState state, boolean includeData) {
+        ItemStack moaEggItem = super.getCloneItemStack(level, pos, state, includeData);
         Moa.KeratinColor keratinColor = state.getValue(KERATIN);
         Moa.EyeColor eyeColor = state.getValue(EYES);
         Moa.FeatherColor featherColor = state.getValue(FEATHERS);
@@ -179,6 +173,6 @@ public class MoaEggBlock extends BaseEntityBlock {
     @Nullable
     @Override
     public <T extends BlockEntity> BlockEntityTicker<T> getTicker(Level level, BlockState state, BlockEntityType<T> blockEntity) {
-        return createTickerHelper(blockEntity, AetherIIBlockEntityTypes.MOA_EGG.get(), MoaEggBlockEntity::tick);
+        return createTickerHelper(blockEntity, AetherIIBlockEntityTypes.MOA_EGG, MoaEggBlockEntity::tick);
     }
 }

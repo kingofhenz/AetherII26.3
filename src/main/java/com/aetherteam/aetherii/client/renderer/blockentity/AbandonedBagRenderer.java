@@ -1,5 +1,6 @@
 package com.aetherteam.aetherii.client.renderer.blockentity;
 
+import net.minecraft.client.renderer.rendertype.RenderType;
 import com.aetherteam.aetherii.AetherII;
 import com.aetherteam.aetherii.block.AetherIIBlocks;
 import com.aetherteam.aetherii.block.dungeon.AbandonedBagBlock;
@@ -49,13 +50,15 @@ public class AbandonedBagRenderer implements BlockEntityRenderer<AbandonedBagBlo
     public void render(PoseStack poseStack, SubmitNodeCollector collector, AbandonedBagRenderState state, int packedLight, float yRot, float openness) {
         poseStack.pushPose();
         poseStack.translate(0.5F, 1.5F, 0.5F);
-        poseStack.mulPose(Axis.XP.rotationDegrees(180));
-        poseStack.mulPose(Axis.YP.rotationDegrees(yRot));
+        poseStack.rotateDegrees(Axis.XP, 180);
+        poseStack.rotateDegrees(Axis.YP, yRot);
 
         this.model.setupAnim(openness);
-        collector.submitModel(
-                this.model, openness, poseStack, RenderTypes.entityCutout(ABANDONED_BAG_LOCATION), packedLight, OverlayTexture.NO_OVERLAY, -1, null, 0, state.breakProgress
-        );
+        RenderType renderType = RenderTypes.entityCutout(ABANDONED_BAG_LOCATION);
+        collector.submitModel(this.model, openness, poseStack, renderType, packedLight, OverlayTexture.NO_OVERLAY, -1, null, 0);
+        if (state.breakProgress != null) {
+            collector.order(1).submitCrumblingOverlay(this.model, openness, poseStack, renderType, packedLight, OverlayTexture.NO_OVERLAY, -1, state.breakProgress);
+        }
 
         poseStack.popPose();
     }
@@ -69,7 +72,7 @@ public class AbandonedBagRenderer implements BlockEntityRenderer<AbandonedBagBlo
     public void extractRenderState(AbandonedBagBlockEntity blockEntity, AbandonedBagRenderState state, float p_446851_, Vec3 p_445788_, ModelFeatureRenderer.@Nullable CrumblingOverlay p_446944_) {
         BlockEntityRenderer.super.extractRenderState(blockEntity, state, p_446851_, p_445788_, p_446944_);
         boolean flag = blockEntity.getLevel() != null;
-        BlockState blockstate = flag ? blockEntity.getBlockState() : AetherIIBlocks.ABANDONED_BAG.get().defaultBlockState().setValue(AbandonedBagBlock.FACING, Direction.SOUTH);
+        BlockState blockstate = flag ? blockEntity.getBlockState() : AetherIIBlocks.ABANDONED_BAG.defaultBlockState().setValue(AbandonedBagBlock.FACING, Direction.SOUTH);
         state.angle = blockstate.getValue(AbandonedBagBlock.FACING).toYRot();
         state.open = blockEntity.getOpenNess(p_446851_);
 

@@ -1,9 +1,9 @@
 package com.aetherteam.aetherii.recipe.recipes.block;
 
 import com.aetherteam.aetherii.recipe.recipes.AetherIIRecipeTypes;
-import com.aetherteam.nitrogen.recipe.BlockPropertyPair;
-import com.aetherteam.nitrogen.recipe.BlockStateIngredient;
-import com.aetherteam.nitrogen.recipe.recipes.AbstractBlockStateRecipe;
+import com.aetherteam.aetherii.nitrogen.recipe.BlockPropertyPair;
+import com.aetherteam.aetherii.nitrogen.recipe.BlockStateIngredient;
+import com.aetherteam.aetherii.nitrogen.recipe.recipes.AbstractBlockStateRecipe;
 import com.mojang.serialization.MapCodec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import net.minecraft.core.BlockPos;
@@ -27,7 +27,7 @@ public class AlkahestCorrosionRecipe extends AbstractBlockStateRecipe implements
     public static final RecipeSerializer<AlkahestCorrosionRecipe> SERIALIZER = new RecipeSerializer<>(MAP_CODEC, STREAM_CODEC);
 
     public AlkahestCorrosionRecipe(BlockStateIngredient ingredient, BlockPropertyPair result, Optional<Identifier> function) {
-        super(AetherIIRecipeTypes.ALKAHEST_CORROSION.get(), ingredient, result, function);
+        super(AetherIIRecipeTypes.ALKAHEST_CORROSION, ingredient, result, function);
     }
 
     @Override

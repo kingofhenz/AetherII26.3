@@ -2,7 +2,7 @@ package com.aetherteam.aetherii.block.natural;
 
 import com.aetherteam.aetherii.client.sound.AetherIISoundEvents;
 import com.mojang.serialization.MapCodec;
-import net.minecraft.advancements.CriteriaTriggers;
+import net.minecraft.advancements.triggers.CriteriaTriggers;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.particles.BlockParticleOption;
 import net.minecraft.core.particles.ParticleTypes;
@@ -30,13 +30,7 @@ import net.minecraft.world.phys.shapes.VoxelShape;
 import org.jspecify.annotations.Nullable;
 
 public class GelBlock extends HalfTransparentBlock {
-    public static final MapCodec<GelBlock> CODEC = simpleCodec(GelBlock::new);
     private static final VoxelShape SHAPE = Block.column(14.0, 0.0, 15.0);
-
-    @Override
-    public MapCodec<GelBlock> codec() {
-        return CODEC;
-    }
 
     public GelBlock(BlockBehaviour.Properties properties) {
         super(properties);
@@ -47,27 +41,23 @@ public class GelBlock extends HalfTransparentBlock {
         return SHAPE;
     }
 
-    @Override
+    /**
+     * NeoForge's {@code isStickyBlock}/{@code canStickTo}, applied through {@link com.aetherteam.aetherii.mixin.mixins.common.PistonStructureResolverMixin}.
+     */
     public boolean isStickyBlock(BlockState state) {
         return true;
     }
 
-    @Override
     public boolean canStickTo(BlockState state, BlockState other) {
         if (other.getBlock() == Blocks.SLIME_BLOCK || other.getBlock() == Blocks.HONEY_BLOCK) {
             return false;
         }
-        return super.canStickTo(state, other);
-    }
-
-    @Override
-    public PathType getBlockPathType(BlockState state, BlockGetter level, BlockPos pos, @Nullable Mob mob) {
-        return PathType.STICKY_HONEY;
+        return true;
     }
 
     @Override
     public void fallOn(Level level, BlockState state, BlockPos pos, Entity entity, double fallDistance) {
-        entity.playSound(AetherIISoundEvents.BLOCK_GEL_SLIDE.get(), 1.0F, 1.0F);
+        entity.playSound(AetherIISoundEvents.BLOCK_GEL_SLIDE, 1.0F, 1.0F);
         if (level instanceof ServerLevel serverLevel) {
             this.showParticles(serverLevel, state, entity, 10);
         }
@@ -130,7 +120,7 @@ public class GelBlock extends HalfTransparentBlock {
         if (doesEntityDoSlideEffects(entity)) {
             RandomSource random = level.getRandom();
             if (random.nextInt(5) == 0) {
-                entity.playSound(AetherIISoundEvents.BLOCK_GEL_SLIDE.get(), 1.0F, 1.0F);
+                entity.playSound(AetherIISoundEvents.BLOCK_GEL_SLIDE, 1.0F, 1.0F);
             }
             if (level instanceof ServerLevel serverLevel && random.nextInt(5) == 0) {
                 this.showParticles(serverLevel, state, entity, 5);

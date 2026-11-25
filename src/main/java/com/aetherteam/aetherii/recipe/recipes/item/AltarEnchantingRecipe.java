@@ -1,5 +1,6 @@
 package com.aetherteam.aetherii.recipe.recipes.item;
 
+import net.minecraft.core.registries.BuiltInRegistries;
 import com.aetherteam.aetherii.AetherIITags;
 import com.aetherteam.aetherii.block.AetherIIBlocks;
 import com.aetherteam.aetherii.recipe.book.AetherIIRecipeBookCategories;
@@ -85,7 +86,7 @@ public class AltarEnchantingRecipe extends SingleItemRecipe {
 
     @Override
     public RecipeType<AltarEnchantingRecipe> getType() {
-        return AetherIIRecipeTypes.ALTAR_ENCHANTING.get();
+        return AetherIIRecipeTypes.ALTAR_ENCHANTING;
     }
 
     @Override
@@ -95,11 +96,11 @@ public class AltarEnchantingRecipe extends SingleItemRecipe {
 
     @Override
     public List<RecipeDisplay> display() {
-        if (this.input().getCustomIngredient() == null && this.input().getValues().contains(this.result().typeHolder())) {
+        if (this.input().acceptsItem(this.result().typeHolder())) {
             ItemStackTemplate input = new ItemStackTemplate(this.result().item(), this.result().count(), DataComponentPatch.builder().set(DataComponents.DAMAGE, this.result().create().getMaxDamage()).build());
             return List.of(new AltarRecipeDisplay(
                     new SlotDisplay.ItemStackSlotDisplay(input),
-                    new SlotDisplay.TagSlotDisplay(AetherIITags.Items.ALTAR_FUEL),
+                    new SlotDisplay.TagSlotDisplay(BuiltInRegistries.ITEM.getOrThrow(AetherIITags.Items.ALTAR_FUEL)),
                     new SlotDisplay.ItemStackSlotDisplay(this.result()),
                     new SlotDisplay.ItemSlotDisplay(AetherIIBlocks.ALTAR.asItem()),
                     this.fuelCount,
@@ -109,7 +110,7 @@ public class AltarEnchantingRecipe extends SingleItemRecipe {
         } else {
             return List.of(new AltarRecipeDisplay(
                     this.input().display(),
-                    new SlotDisplay.TagSlotDisplay(AetherIITags.Items.ALTAR_FUEL),
+                    new SlotDisplay.TagSlotDisplay(BuiltInRegistries.ITEM.getOrThrow(AetherIITags.Items.ALTAR_FUEL)),
                     new SlotDisplay.ItemStackSlotDisplay(this.result()),
                     new SlotDisplay.ItemSlotDisplay(AetherIIBlocks.ALTAR.asItem()),
                     this.fuelCount,
@@ -122,10 +123,10 @@ public class AltarEnchantingRecipe extends SingleItemRecipe {
     @Override
     public RecipeBookCategory recipeBookCategory() {
         return switch (this.category()) {
-            case BLOCKS -> AetherIIRecipeBookCategories.ALTAR_BLOCKS.get();
-            case FOOD -> AetherIIRecipeBookCategories.ALTAR_FOOD.get();
-            case REPAIRING -> AetherIIRecipeBookCategories.ALTAR_REPAIRING.get();
-            case MISC -> AetherIIRecipeBookCategories.ALTAR_MISC.get();
+            case BLOCKS -> AetherIIRecipeBookCategories.ALTAR_BLOCKS;
+            case FOOD -> AetherIIRecipeBookCategories.ALTAR_FOOD;
+            case REPAIRING -> AetherIIRecipeBookCategories.ALTAR_REPAIRING;
+            case MISC -> AetherIIRecipeBookCategories.ALTAR_MISC;
         };
     }
 

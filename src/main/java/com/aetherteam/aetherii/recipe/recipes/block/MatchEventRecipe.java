@@ -2,7 +2,7 @@ package com.aetherteam.aetherii.recipe.recipes.block;
 
 import com.aetherteam.aetherii.event.AetherEventDispatch;
 import com.aetherteam.aetherii.event.ItemUseConvertEvent;
-import com.aetherteam.nitrogen.recipe.BlockStateRecipeUtil;
+import com.aetherteam.aetherii.nitrogen.recipe.BlockStateRecipeUtil;
 import net.minecraft.commands.CacheableFunction;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.entity.player.Player;

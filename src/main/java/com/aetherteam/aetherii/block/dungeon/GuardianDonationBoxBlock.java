@@ -45,7 +45,6 @@ import java.util.List;
 import java.util.Map;
 
 public class GuardianDonationBoxBlock extends BaseEntityBlock implements SimpleWaterloggedBlock {
-    public static final MapCodec<GuardianDonationBoxBlock> CODEC = simpleCodec(GuardianDonationBoxBlock::new);
     public static final EnumProperty<Direction> FACING = HorizontalDirectionalBlock.FACING;;
     public static final BooleanProperty WATERLOGGED = BlockStateProperties.WATERLOGGED;
     public static final Map<Direction, VoxelShape> SHAPES = Shapes.rotateHorizontal(Shapes.or(
@@ -53,11 +52,6 @@ public class GuardianDonationBoxBlock extends BaseEntityBlock implements SimpleW
             Block.box(4.0F, 1.0F, 3.0F, 12.0F, 4.0F, 13.0F),
             Block.box(3.0F, 4.0F, 2.0F, 13.0F, 12.0F, 14.0F)
     ));
-
-    @Override
-    public MapCodec<GuardianDonationBoxBlock> codec() {
-        return CODEC;
-    }
 
     public GuardianDonationBoxBlock(Properties properties) {
         super(properties);
@@ -154,7 +148,7 @@ public class GuardianDonationBoxBlock extends BaseEntityBlock implements SimpleW
                         count = (float) storedItem.getCount() / (float) storedItem.getMaxStackSize();
                     }
 
-                    level.playSound(null, pos, AetherIISoundEvents.BLOCK_GUARDIAN_DONATION_BOX_INSERT.get(), SoundSource.BLOCKS, 1.0F, 0.7F + 0.5F * count);
+                    level.playSound(null, pos, AetherIISoundEvents.BLOCK_GUARDIAN_DONATION_BOX_INSERT, SoundSource.BLOCKS, 1.0F, 0.7F + 0.5F * count);
                     if (level instanceof ServerLevel serverLevel) {
                         serverLevel.sendParticles(ParticleTypes.DUST_PLUME, pos.getX() + 0.5, pos.getY() + 0.85, pos.getZ() + 0.5, 7, 0.0, 0.0, 0.0, 0.0);
                     }
@@ -171,7 +165,7 @@ public class GuardianDonationBoxBlock extends BaseEntityBlock implements SimpleW
     @Override
     protected InteractionResult useWithoutItem(BlockState state, Level level, BlockPos pos, Player player, BlockHitResult hitResult) {
         if (level.getBlockEntity(pos) instanceof GuardianDonationBoxBlockEntity) {
-            level.playSound(null, pos, AetherIISoundEvents.BLOCK_GUARDIAN_DONATION_BOX_INSERT_FAIL.get(), SoundSource.BLOCKS, 1.0F, 1.0F);
+            level.playSound(null, pos, AetherIISoundEvents.BLOCK_GUARDIAN_DONATION_BOX_INSERT_FAIL, SoundSource.BLOCKS, 1.0F, 1.0F);
             level.gameEvent(player, GameEvent.BLOCK_CHANGE, pos);
             return InteractionResult.SUCCESS;
         } else {

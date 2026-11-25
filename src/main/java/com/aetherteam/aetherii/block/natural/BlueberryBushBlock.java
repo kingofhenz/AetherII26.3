@@ -1,5 +1,7 @@
 package com.aetherteam.aetherii.block.natural;
 
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.item.enchantment.EnchantmentHelper;
 import com.aetherteam.aetherii.block.AetherIIBlocks;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.registries.Registries;
@@ -13,22 +15,24 @@ import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.function.BiConsumer;
+
 public class BlueberryBushBlock extends FullAetherBushBlock {
     public BlueberryBushBlock(Properties properties) {
         super(properties);
     }
 
     @Override
-    public void playerDestroy(Level level, Player player, BlockPos pos, BlockState state, @Nullable BlockEntity blockEntity, ItemStack tool) {
+    public void playerDestroy(ServerLevel level, ServerPlayer player, BlockPos pos, BlockState state, @Nullable BlockEntity blockEntity, ItemStack tool) {
         super.playerDestroy(level, player, pos, state, blockEntity, tool);
-        if (tool.getEnchantmentLevel(level.registryAccess().lookupOrThrow(Registries.ENCHANTMENT).getOrThrow(Enchantments.SILK_TOUCH)) <= 0) {
-            level.setBlock(pos, AetherIIBlocks.BLUEBERRY_BUSH_STEM.get().defaultBlockState(), 1 | 2);
+        if (EnchantmentHelper.getItemEnchantmentLevel(level.registryAccess().lookupOrThrow(Registries.ENCHANTMENT).getOrThrow(Enchantments.SILK_TOUCH), tool) <= 0) {
+            level.setBlock(pos, AetherIIBlocks.BLUEBERRY_BUSH_STEM.defaultBlockState(), 1 | 2);
         }
     }
 
     @Override
-    public void onBlockExploded(BlockState state, ServerLevel level, BlockPos pos, Explosion explosion) {
-        super.onBlockExploded(state, level, pos, explosion);
-        level.setBlock(pos, AetherIIBlocks.BLUEBERRY_BUSH_STEM.get().defaultBlockState(), 1 | 2);
+    protected void onExplosionHit(BlockState state, ServerLevel level, BlockPos pos, Explosion explosion, BiConsumer<ItemStack, BlockPos> onHit) {
+        super.onExplosionHit(state, level, pos, explosion, onHit);
+        level.setBlock(pos, AetherIIBlocks.BLUEBERRY_BUSH_STEM.defaultBlockState(), 1 | 2);
     }
 }

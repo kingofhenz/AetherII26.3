@@ -1,5 +1,6 @@
 package com.aetherteam.aetherii.client.renderer.blockentity;
 
+import net.minecraft.client.renderer.rendertype.RenderType;
 import com.aetherteam.aetherii.AetherII;
 import com.aetherteam.aetherii.block.AetherIIBlocks;
 import com.aetherteam.aetherii.block.utility.AlkahestPurifierBlock;
@@ -58,14 +59,16 @@ public class AlkahestPurifierRenderer implements BlockEntityRenderer<AlkahestPur
     public void render(PoseStack poseStack, SubmitNodeCollector collector, AlkahestPurifierRenderState state, int packedLight, float yRot, int alkahestLevel, float openness) {
         poseStack.pushPose();
         poseStack.translate(0.5F, 1.5F, 0.5F);
-        poseStack.mulPose(Axis.XP.rotationDegrees(180));
-        poseStack.mulPose(Axis.YP.rotationDegrees(yRot));
+        poseStack.rotateDegrees(Axis.XP, 180);
+        poseStack.rotateDegrees(Axis.YP, yRot);
 
         SpriteId spriteId = getTextureForLevel(state.level);
         this.model.setupAnim(openness);
-        collector.submitModel(
-                this.model, openness, poseStack, spriteId.renderType(this.model::renderType), packedLight, OverlayTexture.NO_OVERLAY, -1, this.sprites.get(spriteId), 0, state.breakProgress
-        );
+        RenderType renderType = spriteId.renderType(this.model::renderType);
+        collector.submitModel(this.model, openness, poseStack, renderType, packedLight, OverlayTexture.NO_OVERLAY, -1, this.sprites.get(spriteId), 0);
+        if (state.breakProgress != null) {
+            collector.order(1).submitCrumblingOverlay(this.model, openness, poseStack, renderType, packedLight, OverlayTexture.NO_OVERLAY, -1, state.breakProgress);
+        }
 
         poseStack.popPose();
     }
@@ -89,7 +92,7 @@ public class AlkahestPurifierRenderer implements BlockEntityRenderer<AlkahestPur
     public void extractRenderState(AlkahestPurifierBlockEntity blockEntity, AlkahestPurifierRenderState state, float p_446851_, Vec3 p_445788_, ModelFeatureRenderer.@Nullable CrumblingOverlay p_446944_) {
         BlockEntityRenderer.super.extractRenderState(blockEntity, state, p_446851_, p_445788_, p_446944_);
         boolean flag = blockEntity.getLevel() != null;
-        BlockState blockstate = flag ? blockEntity.getBlockState() : AetherIIBlocks.ALKAHEST_PURIFIER.get().defaultBlockState().setValue(AlkahestPurifierBlock.FACING, Direction.SOUTH);
+        BlockState blockstate = flag ? blockEntity.getBlockState() : AetherIIBlocks.ALKAHEST_PURIFIER.defaultBlockState().setValue(AlkahestPurifierBlock.FACING, Direction.SOUTH);
         state.angle = blockstate.getValue(AlkahestPurifierBlock.FACING).toYRot();
         state.level = blockstate.getValue(AlkahestPurifierBlock.LEVEL);
         state.open = blockEntity.getOpenNess(p_446851_);

@@ -1,9 +1,9 @@
 package com.aetherteam.aetherii.recipe.recipes.block;
 
-import com.aetherteam.nitrogen.recipe.BlockPropertyPair;
-import com.aetherteam.nitrogen.recipe.BlockStateIngredient;
-import com.aetherteam.nitrogen.recipe.BlockStateRecipeUtil;
-import com.aetherteam.nitrogen.recipe.recipes.AbstractBlockStateRecipe;
+import com.aetherteam.aetherii.nitrogen.recipe.BlockPropertyPair;
+import com.aetherteam.aetherii.nitrogen.recipe.BlockStateIngredient;
+import com.aetherteam.aetherii.nitrogen.recipe.BlockStateRecipeUtil;
+import com.aetherteam.aetherii.nitrogen.recipe.recipes.AbstractBlockStateRecipe;
 import com.mojang.datafixers.Products;
 import com.mojang.datafixers.util.Either;
 import com.mojang.serialization.MapCodec;

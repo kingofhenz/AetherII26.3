@@ -1,5 +1,6 @@
 package com.aetherteam.aetherii.world.structure.piece.sentry;
 
+import net.minecraft.world.level.levelgen.feature.Feature;
 import com.aetherteam.aetherii.AetherIITags;
 import com.aetherteam.aetherii.data.resources.registries.holyisles.HolyIslesConfiguredFeatures;
 import com.aetherteam.aetherii.entity.AetherIIEntityTypes;
@@ -19,7 +20,6 @@ import net.minecraft.world.level.ServerLevelAccessor;
 import net.minecraft.world.level.WorldGenLevel;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.Rotation;
-import net.minecraft.world.level.levelgen.feature.ConfiguredFeature;
 import net.minecraft.world.level.levelgen.structure.BoundingBox;
 import net.minecraft.world.level.levelgen.structure.pieces.StructurePieceSerializationContext;
 import net.minecraft.world.level.levelgen.structure.templatesystem.StructurePlaceSettings;
@@ -34,11 +34,11 @@ import java.util.Objects;
  */
 public class SentryRuinsRoom extends SentryRuinsPiece {
     public SentryRuinsRoom(StructureTemplateManager manager, String name, BlockPos pos, Rotation rotation, Holder<StructureProcessorList> processors) {
-        super(AetherIIStructurePieceTypes.SENTRY_RUINS_ROOM.get(), manager, name, new StructurePlaceSettings().setRotation(rotation), pos, processors);
+        super(AetherIIStructurePieceTypes.SENTRY_RUINS_ROOM, manager, name, new StructurePlaceSettings().setRotation(rotation), pos, processors);
     }
 
     public SentryRuinsRoom(StructurePieceSerializationContext context, CompoundTag tag) {
-        super(AetherIIStructurePieceTypes.SENTRY_RUINS_ROOM.get(), context.registryAccess(), tag, context.structureTemplateManager(), resourceLocation -> new StructurePlaceSettings());
+        super(AetherIIStructurePieceTypes.SENTRY_RUINS_ROOM, context.registryAccess(), tag, context.structureTemplateManager(), resourceLocation -> new StructurePlaceSettings());
     }
 
     @Override
@@ -46,7 +46,7 @@ public class SentryRuinsRoom extends SentryRuinsPiece {
         level.setBlock(pos, Blocks.AIR.defaultBlockState(), 2);
 
         if (name.equals("Sentry Golem")) {
-            SentryGolem sentryGolem = new SentryGolem(AetherIIEntityTypes.SENTRY_GOLEM.get(), level.getLevel());
+            SentryGolem sentryGolem = new SentryGolem(AetherIIEntityTypes.SENTRY_GOLEM, level.getLevel());
             sentryGolem.setPos(Vec3.atBottomCenterOf(pos));
             sentryGolem.setItemSlot(EquipmentSlot.MAINHAND, new ItemStack(AetherIIItems.HAMMER_OF_DEMOLITION.asItem()));
             sentryGolem.setLeftHanded(true);
@@ -62,7 +62,7 @@ public class SentryRuinsRoom extends SentryRuinsPiece {
                 }
                 else Objects.requireNonNull(level.registryAccess().get(HolyIslesConfiguredFeatures.BRYALINN_MOSS_STRUCTURE).orElse(null)).value().place((WorldGenLevel) level, level.getLevel().getChunkSource().getGenerator(), random, pos);
             } else {
-                ConfiguredFeature<?, ?> feature = Objects.requireNonNull(level.registryAccess().get(ResourceKey.create(Registries.CONFIGURED_FEATURE, Identifier.parse(name))).orElse(null)).value();
+                Feature feature = Objects.requireNonNull(level.registryAccess().get(ResourceKey.create(Registries.FEATURE, Identifier.parse(name))).orElse(null)).value();
                 feature.place((WorldGenLevel) level, level.getLevel().getChunkSource().getGenerator(), random, pos);
             }
         }

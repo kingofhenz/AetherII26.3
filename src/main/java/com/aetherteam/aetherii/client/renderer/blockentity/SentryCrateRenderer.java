@@ -54,7 +54,7 @@ public class SentryCrateRenderer implements BlockEntityRenderer<SentryCrateBlock
         poseStack.pushPose();
         float yRot = sentryCrateRenderState.facing.toYRot();
             poseStack.translate(0.5F, 0.5F, 0.5F);
-            poseStack.mulPose(Axis.YP.rotationDegrees(-yRot));
+            poseStack.rotateDegrees(Axis.YP, -yRot);
             poseStack.translate(-0.5F, -0.5F, -0.5F);
 
         int frame = Math.max(0, (int) Math.ceil(sentryCrateRenderState.open * 4) - 1);
@@ -79,18 +79,13 @@ public class SentryCrateRenderer implements BlockEntityRenderer<SentryCrateBlock
         RenderType emissiveRenderType = emissiveId.renderType(RenderTypes::entityCutout);
 
 
-        submitNodeCollector.submitModel(model, Unit.INSTANCE, poseStack, renderType, i, OverlayTexture.NO_OVERLAY,
-                -1,
-                sprites.get(spriteId),
-                0,
-                state.breakProgress);
+        submitNodeCollector.submitModel(model, Unit.INSTANCE, poseStack, renderType, i, OverlayTexture.NO_OVERLAY, -1, sprites.get(spriteId), 0);
+        if (state.breakProgress != null) {
+            submitNodeCollector.order(1).submitCrumblingOverlay(model, Unit.INSTANCE, poseStack, renderType, i, OverlayTexture.NO_OVERLAY, -1, state.breakProgress);
+        }
 
         if (state.open > 0) {
-            submitNodeCollector.submitModel(model, Unit.INSTANCE, poseStack, emissiveRenderType, LightCoordsUtil.FULL_BRIGHT, OverlayTexture.NO_OVERLAY,
-                    -1,
-                    sprites.get(emissiveId),
-                    0,
-                    state.breakProgress);
+            submitNodeCollector.submitModel(model, Unit.INSTANCE, poseStack, emissiveRenderType, LightCoordsUtil.FULL_BRIGHT, OverlayTexture.NO_OVERLAY, -1, sprites.get(emissiveId), 0);
         }
     }
 
@@ -111,7 +106,7 @@ public class SentryCrateRenderer implements BlockEntityRenderer<SentryCrateBlock
     public void extractRenderState(SentryCrateBlockEntity blockEntity, SentryCrateRenderState state, float p_446851_, Vec3 vec3, ModelFeatureRenderer.@Nullable CrumblingOverlay p_446944_) {
         BlockEntityRenderer.super.extractRenderState(blockEntity, state, p_446851_, vec3, p_446944_);
         boolean flag = blockEntity.getLevel() != null;
-        BlockState blockstate = flag ? blockEntity.getBlockState() : AetherIIBlocks.SENTRY_CRATE.get().defaultBlockState().setValue(SentryCrateBlock.FACING, Direction.SOUTH);
+        BlockState blockstate = flag ? blockEntity.getBlockState() : AetherIIBlocks.SENTRY_CRATE.defaultBlockState().setValue(SentryCrateBlock.FACING, Direction.SOUTH);
         state.facing = blockstate.getValue(SentryCrateBlock.FACING);
         ChestType type = blockstate.hasProperty(SentryCrateBlock.TYPE) ? blockstate.getValue(SentryCrateBlock.TYPE) : ChestType.SINGLE;
         state.type = type;

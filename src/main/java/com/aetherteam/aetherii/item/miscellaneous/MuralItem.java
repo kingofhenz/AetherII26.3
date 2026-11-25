@@ -1,5 +1,6 @@
 package com.aetherteam.aetherii.item.miscellaneous;
 
+import net.minecraft.world.item.component.SwingAnimation;
 import com.aetherteam.aetherii.api.Mural;
 import com.aetherteam.aetherii.api.registries.AetherIIRegistries;
 import com.aetherteam.aetherii.block.AetherIIBlocks;
@@ -44,7 +45,7 @@ public class MuralItem extends Item {
         var player = context.getPlayer();
         if (player != null && !context.getLevel().isClientSide()) {
             if (this.createMural(context)) {
-                player.swing(context.getHand());
+                player.swing(context.getHand(), SwingAnimation.DEFAULT, false);
                 player.level().playSound(null, context.getClickedPos(), this.muralBlock.defaultBlockState().getSoundType().getPlaceSound(), SoundSource.PLAYERS, 1.0F, 1.0F);
                 if (!player.getAbilities().instabuild) {
                     context.getItemInHand().shrink(1);
@@ -110,7 +111,7 @@ public class MuralItem extends Item {
 
     @Override
     public void appendHoverText(ItemStack stack, TooltipContext context, TooltipDisplay tooltipDisplay, Consumer<Component> tooltipAdder, TooltipFlag flag) {
-        if (this.muralBlock == AetherIIBlocks.MURAL.get() && tooltipDisplay.shows(AetherIIDataComponents.MURAL.get())) {
+        if (this.muralBlock == AetherIIBlocks.MURAL && tooltipDisplay.shows(AetherIIDataComponents.MURAL)) {
             Holder<Mural> holder = stack.get(AetherIIDataComponents.MURAL);
             if (holder != null) {
                 holder.value().addToTooltip(context, tooltipAdder, flag, stack);

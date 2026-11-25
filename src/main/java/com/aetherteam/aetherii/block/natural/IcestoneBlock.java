@@ -16,15 +16,9 @@ import net.minecraft.world.level.gameevent.GameEventListener;
 import org.jetbrains.annotations.Nullable;
 
 public class IcestoneBlock extends BaseEntityBlock {
-    public static final MapCodec<IcestoneBlock> CODEC = simpleCodec(IcestoneBlock::new);
 
     public IcestoneBlock(Properties properties) {
         super(properties);
-    }
-
-    @Override
-    protected MapCodec<? extends BaseEntityBlock> codec() {
-        return CODEC;
     }
 
     @Nullable
@@ -42,7 +36,7 @@ public class IcestoneBlock extends BaseEntityBlock {
     @Nullable
     @Override
     public <T extends BlockEntity> BlockEntityTicker<T> getTicker(Level level, BlockState state, BlockEntityType<T> blockEntityType) {
-        return level.isClientSide() ? null : createTickerHelper(blockEntityType, AetherIIBlockEntityTypes.ICESTONE.get(), IcestoneBlockEntity::serverTick);
+        return level.isClientSide() ? null : createTickerHelper(blockEntityType, AetherIIBlockEntityTypes.ICESTONE, IcestoneBlockEntity::serverTick);
     }
 
     /**

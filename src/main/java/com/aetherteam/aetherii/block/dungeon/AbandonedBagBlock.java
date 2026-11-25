@@ -37,7 +37,6 @@ import org.jspecify.annotations.Nullable;
 import java.util.Map;
 
 public class AbandonedBagBlock extends AbstractChestBlock<AbandonedBagBlockEntity> implements SimpleWaterloggedBlock {
-    public static final MapCodec<AbandonedBagBlock> CODEC = simpleCodec(AbandonedBagBlock::new);
     public static final EnumProperty<Direction> FACING = HorizontalDirectionalBlock.FACING;
     public static final BooleanProperty WATERLOGGED = BlockStateProperties.WATERLOGGED;
     public static final Map<Direction, VoxelShape> SHAPES = Shapes.rotateHorizontal(Shapes.or(
@@ -45,13 +44,8 @@ public class AbandonedBagBlock extends AbstractChestBlock<AbandonedBagBlockEntit
             Block.box(1.0F, 0.0F, 10.0F, 4.0F, 4.0F, 13.0F)
     ));
 
-    @Override
-    public MapCodec<AbandonedBagBlock> codec() {
-        return CODEC;
-    }
-
     public AbandonedBagBlock(BlockBehaviour.Properties properties) {
-        super(properties, AetherIIBlockEntityTypes.ABANDONED_BAG::get);
+        super(properties, () -> AetherIIBlockEntityTypes.ABANDONED_BAG);
         this.registerDefaultState(this.stateDefinition.any().setValue(FACING, Direction.NORTH).setValue(WATERLOGGED, false));
     }
 
@@ -94,7 +88,7 @@ public class AbandonedBagBlock extends AbstractChestBlock<AbandonedBagBlockEntit
 
     @Override
     public <T extends BlockEntity> @Nullable BlockEntityTicker<T> getTicker(Level level, BlockState blockState, BlockEntityType<T> type) {
-        return level.isClientSide() ? createTickerHelper(type, AetherIIBlockEntityTypes.ABANDONED_BAG.get(), AbandonedBagBlockEntity::lidAnimateTick) : null;
+        return level.isClientSide() ? createTickerHelper(type, AetherIIBlockEntityTypes.ABANDONED_BAG, AbandonedBagBlockEntity::lidAnimateTick) : null;
     }
 
     @Override

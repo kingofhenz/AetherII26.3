@@ -15,12 +15,6 @@ import net.minecraft.world.level.block.state.BlockState;
 import javax.annotation.Nullable;
 
 public class SentryTrapBlock extends GroundTrapBlock {
-    public static final MapCodec<SentryTrapBlock> CODEC = simpleCodec(SentryTrapBlock::new);
-
-    @Override
-    public MapCodec<SentryTrapBlock> codec() {
-        return CODEC;
-    }
 
     public SentryTrapBlock(BlockBehaviour.Properties properties) {
         super(properties);
@@ -35,6 +29,6 @@ public class SentryTrapBlock extends GroundTrapBlock {
     @Nullable
     @Override
     public <T extends BlockEntity> BlockEntityTicker<T> getTicker(Level level, BlockState state, BlockEntityType<T> type) {
-        return createTickerHelper(type, AetherIIBlockEntityTypes.SENTRY_TRAP.get(), level.isClientSide() ? SentryTrapBlockEntity::clientTick : SentryTrapBlockEntity::serverTick);
+        return createTickerHelper(type, AetherIIBlockEntityTypes.SENTRY_TRAP, level.isClientSide() ? SentryTrapBlockEntity::clientTick : SentryTrapBlockEntity::serverTick);
     }
 }

@@ -3,9 +3,9 @@ package com.aetherteam.aetherii.data.generators;
 import com.aetherteam.aetherii.AetherII;
 import com.aetherteam.aetherii.client.sound.AetherIISoundEvents;
 import net.minecraft.data.PackOutput;
-import net.neoforged.neoforge.common.data.SoundDefinitionsProvider;
+import com.aetherteam.aetherii.data.providers.AetherIISoundDefinitionsProvider;
 
-public class AetherIISoundData extends SoundDefinitionsProvider {
+public class AetherIISoundData extends AetherIISoundDefinitionsProvider {
     public AetherIISoundData(PackOutput output) {
         super(output, AetherII.MODID);
     }
@@ -1183,6 +1183,11 @@ public class AetherIISoundData extends SoundDefinitionsProvider {
                 definition().with(
                         sound("minecraft:note/bit")
                 ).subtitle("subtitles.aether_ii.entity.detonation_sentry.beep")
+        );
+        this.add(AetherIISoundEvents.ENTITY_DETONATION_SENTRY_AMBIENT,
+                definition().with(
+                        sound("minecraft:note/bit").volume(0.5F)
+                ).subtitle("subtitles.aether_ii.entity.detonation_sentry.ambient")
         );
 
         this.add(AetherIISoundEvents.ENTITY_SENTRY_GOLEM_DEATH,

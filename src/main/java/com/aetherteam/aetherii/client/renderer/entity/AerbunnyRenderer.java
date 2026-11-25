@@ -36,6 +36,7 @@ public class AerbunnyRenderer extends MobRenderer<Aerbunny, AerbunnyRenderState,
     @Override
     public void extractRenderState(Aerbunny aerbunny, AerbunnyRenderState renderState, float partialTick) {
         super.extractRenderState(aerbunny, renderState, partialTick);
+        renderState.partialTick = partialTick;
         renderState.puffiness = Mth.lerp(partialTick, aerbunny.getPuffiness(), aerbunny.getPuffiness() - aerbunny.getPuffSubtract()) / 20.0F;
         renderState.collarColor = aerbunny.getCollarColor();
         renderState.isSitting = aerbunny.isInSittingPose();
@@ -71,11 +72,11 @@ public class AerbunnyRenderer extends MobRenderer<Aerbunny, AerbunnyRenderState,
         super.setupRotations(aerbunny, poseStack, rotationYaw, scale);
         if (!aerbunny.onGround) {
             if (aerbunny.deltaMovement.y() > 0.5) {
-                poseStack.mulPose(Axis.XN.rotationDegrees(Mth.rotLerp(aerbunny.partialTick, 0.0F, 15.0F)));
+                poseStack.rotateDegrees(Axis.XN, Mth.rotLerp(aerbunny.partialTick, 0.0F, 15.0F));
             } else if (aerbunny.deltaMovement.y() < -0.5) {
-                poseStack.mulPose(Axis.XN.rotationDegrees(Mth.rotLerp(aerbunny.partialTick, 0.0F, -15.0F)));
+                poseStack.rotateDegrees(Axis.XN, Mth.rotLerp(aerbunny.partialTick, 0.0F, -15.0F));
             } else {
-                poseStack.mulPose(Axis.XN.rotationDegrees((float) (aerbunny.deltaMovement.y() * 30.0)));
+                poseStack.rotateDegrees(Axis.XN, (float) (aerbunny.deltaMovement.y() * 30.0));
             }
         }
     }

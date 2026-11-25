@@ -3,7 +3,7 @@ package com.aetherteam.aetherii.integration.jei.categories.block;
 import com.aetherteam.aetherii.AetherII;
 import com.aetherteam.aetherii.item.AetherIIItems;
 import com.aetherteam.aetherii.recipe.recipes.block.AmbrosiumRecipe;
-import com.aetherteam.nitrogen.integration.jei.categories.block.AbstractBlockStateRecipeCategory;
+import com.aetherteam.aetherii.nitrogen.integration.jei.categories.block.AbstractBlockStateRecipeCategory;
 import mezz.jei.api.helpers.IGuiHelper;
 import mezz.jei.api.helpers.IPlatformFluidHelper;
 import mezz.jei.api.recipe.types.IRecipeType;

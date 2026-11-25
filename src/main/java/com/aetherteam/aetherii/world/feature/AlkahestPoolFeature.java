@@ -1,9 +1,10 @@
 package com.aetherteam.aetherii.world.feature;
 
+import net.minecraft.world.level.chunk.ChunkGenerator;
+import com.mojang.serialization.MapCodec;
 import com.aetherteam.aetherii.block.AetherIIBlocks;
 import com.aetherteam.aetherii.block.natural.HestveilBlock;
 import com.aetherteam.aetherii.world.feature.configuration.AlkahestPoolConfiguration;
-import com.mojang.serialization.Codec;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.util.RandomSource;
@@ -12,23 +13,32 @@ import net.minecraft.world.level.WorldGenLevel;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.PointedDripstoneBlock;
 import net.minecraft.world.level.block.state.BlockState;
-import net.minecraft.world.level.block.state.properties.DripstoneThickness;
+import net.minecraft.world.level.block.state.properties.SpeleothemThickness;
 import net.minecraft.world.level.levelgen.feature.Feature;
-import net.minecraft.world.level.levelgen.feature.FeaturePlaceContext;
 
 import java.util.function.Consumer;
 
-public class AlkahestPoolFeature extends Feature<AlkahestPoolConfiguration> {
-    public AlkahestPoolFeature(Codec<AlkahestPoolConfiguration> codec) {
-        super(codec);
+public class AlkahestPoolFeature implements Feature {
+    public static final MapCodec<AlkahestPoolFeature> CODEC = AlkahestPoolConfiguration.CODEC.xmap(AlkahestPoolFeature::new, AlkahestPoolFeature::config);
+    private final AlkahestPoolConfiguration config;
+
+    public AlkahestPoolFeature(AlkahestPoolConfiguration config) {
+        this.config = config;
+    }
+
+    public AlkahestPoolConfiguration config() {
+        return this.config;
     }
 
     @Override
-    public boolean place(FeaturePlaceContext<AlkahestPoolConfiguration> context) {
-        BlockPos pos = context.origin();
-        WorldGenLevel level = context.level();
-        RandomSource random = context.random();
-        AlkahestPoolConfiguration config = context.config();
+    public MapCodec<AlkahestPoolFeature> codec() {
+        return CODEC;
+    }
+
+    @Override
+    public boolean place(WorldGenLevel level, ChunkGenerator chunkGenerator, RandomSource random, BlockPos origin) {
+        BlockPos pos = origin;
+        AlkahestPoolConfiguration config = this.config;
 
         int count = config.count().sample(random);
         for (int i = 0; i < count; i++) {
@@ -51,10 +61,10 @@ public class AlkahestPoolFeature extends Feature<AlkahestPoolConfiguration> {
                         if (y < 0) {
                             if (volume >= radiusSquared) {
                                 if (!level.getBlockState(offsetPos).is(AetherIIBlocks.ALKAHEST)) {
-                                    level.setBlock(offsetPos, AetherIIBlocks.ICHORITE.get().defaultBlockState(), 3);
+                                    level.setBlock(offsetPos, AetherIIBlocks.ICHORITE.defaultBlockState(), 3);
                                     int limit = 1 + random.nextInt(2) + random.nextInt(5);
                                     for (int i = 1; i < limit; i++) {
-                                        level.setBlock(offsetPos.below(i), AetherIIBlocks.ICHORITE.get().defaultBlockState(), 3);
+                                        level.setBlock(offsetPos.below(i), AetherIIBlocks.ICHORITE.defaultBlockState(), 3);
                                         if (i == limit - 1 && random.nextBoolean()) {
                                             if (!level.getBlockState(offsetPos.below(i + 1)).isSolid()) {
                                                 growPointedIchorite(level, offsetPos.below(i + 1), Direction.DOWN, 1 + random.nextInt(2), false);
@@ -63,7 +73,7 @@ public class AlkahestPoolFeature extends Feature<AlkahestPoolConfiguration> {
                                     }
                                 }
                             } else {
-                                level.setBlock(offsetPos, AetherIIBlocks.ALKAHEST.get().defaultBlockState(), 3);
+                                level.setBlock(offsetPos, AetherIIBlocks.ALKAHEST.defaultBlockState(), 3);
                             }
                         } else {
                             level.setBlock(offsetPos, Blocks.CAVE_AIR.defaultBlockState(), 3);
@@ -73,12 +83,12 @@ public class AlkahestPoolFeature extends Feature<AlkahestPoolConfiguration> {
                 for (int y = 0; y < HestveilBlock.MAX_VERTICAL_DISTANCE; y++) {
                     BlockPos offsetPos = pos.offset(x, y, z);
                     if (level.getBlockState(offsetPos).isAir()) {
-                        BlockState hestveilState = HestveilBlock.updateDistance(AetherIIBlocks.HESTVEIL.get().defaultBlockState(), level, offsetPos);
+                        BlockState hestveilState = HestveilBlock.updateDistance(AetherIIBlocks.HESTVEIL.defaultBlockState(), level, offsetPos);
                         if (hestveilState.getValue(HestveilBlock.HORIZONTAL_DISTANCE) < HestveilBlock.MAX_HORIZONTAL_DISTANCE && hestveilState.getValue(HestveilBlock.VERTICAL_DISTANCE) < HestveilBlock.MAX_VERTICAL_DISTANCE) {
                             level.setBlock(offsetPos, HestveilBlock.updateDistance(hestveilState, level, offsetPos), 3);
                         }
                         if (!level.getBlockState(offsetPos.above()).isAir()) {
-                            level.scheduleTick(offsetPos, AetherIIBlocks.HESTVEIL.get(), 1);
+                            level.scheduleTick(offsetPos, AetherIIBlocks.HESTVEIL, 1);
                         }
                     } else {
                         break;
@@ -92,7 +102,7 @@ public class AlkahestPoolFeature extends Feature<AlkahestPoolConfiguration> {
         if (isDripstoneBase(level.getBlockState(pos.relative(direction.getOpposite())))) {
             BlockPos.MutableBlockPos mutablePos = pos.mutable();
             buildBaseToTipColumn(direction, height, mergeTip, state -> {
-                if (state.is(AetherIIBlocks.POINTED_ICHORITE.get())) {
+                if (state.is(AetherIIBlocks.POINTED_ICHORITE)) {
                     state = state.setValue(PointedDripstoneBlock.WATERLOGGED, level.isWaterAt(mutablePos));
                 }
                 level.setBlock(mutablePos, state, 2);
@@ -103,24 +113,24 @@ public class AlkahestPoolFeature extends Feature<AlkahestPoolConfiguration> {
 
     protected static void buildBaseToTipColumn(Direction direction, int height, boolean mergeTip, Consumer<BlockState> blockSetter) {
         if (height >= 3) {
-            blockSetter.accept(createPointedIchorite(direction, DripstoneThickness.BASE));
+            blockSetter.accept(createPointedIchorite(direction, SpeleothemThickness.BASE));
 
             for (int i = 0; i < height - 3; i++) {
-                blockSetter.accept(createPointedIchorite(direction, DripstoneThickness.MIDDLE));
+                blockSetter.accept(createPointedIchorite(direction, SpeleothemThickness.MIDDLE));
             }
         }
 
         if (height >= 2) {
-            blockSetter.accept(createPointedIchorite(direction, DripstoneThickness.FRUSTUM));
+            blockSetter.accept(createPointedIchorite(direction, SpeleothemThickness.FRUSTUM));
         }
 
         if (height >= 1) {
-            blockSetter.accept(createPointedIchorite(direction, mergeTip ? DripstoneThickness.TIP_MERGE : DripstoneThickness.TIP));
+            blockSetter.accept(createPointedIchorite(direction, mergeTip ? SpeleothemThickness.TIP_MERGE : SpeleothemThickness.TIP));
         }
     }
 
-    private static BlockState createPointedIchorite(Direction direction, DripstoneThickness dripstoneThickness) {
-        return AetherIIBlocks.POINTED_ICHORITE.get().defaultBlockState().setValue(PointedDripstoneBlock.TIP_DIRECTION, direction).setValue(PointedDripstoneBlock.THICKNESS, dripstoneThickness);
+    private static BlockState createPointedIchorite(Direction direction, SpeleothemThickness dripstoneThickness) {
+        return AetherIIBlocks.POINTED_ICHORITE.defaultBlockState().setValue(PointedDripstoneBlock.TIP_DIRECTION, direction).setValue(PointedDripstoneBlock.THICKNESS, dripstoneThickness);
     }
 
     public static boolean isDripstoneBase(BlockState state) {

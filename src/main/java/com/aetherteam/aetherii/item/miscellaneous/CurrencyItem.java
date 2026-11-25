@@ -38,16 +38,19 @@ public class CurrencyItem extends Item {
     @Override
     public InteractionResult use(Level level, Player player, InteractionHand usedHand) {
         ItemStack stack = player.getItemInHand(usedHand);
-        CurrencyAttachment attachment = player.getData(AetherIIDataAttachments.CURRENCY);
+        CurrencyAttachment attachment = player.getAttachedOrCreate(AetherIIDataAttachments.CURRENCY);
+        if (com.aetherteam.aetherii.inventory.CurrencyTransfer.deposit(attachment.getAmount(), 1, this.currencyAmount, 0) == 0) {
+            return InteractionResult.FAIL;
+        }
         attachment.setAmount(attachment.getAmount() + this.currencyAmount);
-        player.syncData(AetherIIDataAttachments.CURRENCY);
+        player.getAttachedOrCreate(AetherIIDataAttachments.CURRENCY).markDirty();
         if (player instanceof ServerPlayer serverPlayer) {
-            AetherIIAdvancementTriggers.CURRENCY.get().trigger(serverPlayer, attachment.getAmount());
+            AetherIIAdvancementTriggers.CURRENCY.trigger(serverPlayer, attachment.getAmount());
         }
         player.awardStat(Stats.ITEM_USED.get(this));
         stack.consume(1, player);
         if (level.isClientSide()) {
-            GuiAccessor gui = (GuiAccessor) Minecraft.getInstance().gui;
+            GuiAccessor gui = (GuiAccessor) Minecraft.getInstance().gui.hud;
             player.sendOverlayMessage(Component.translatable("aether_ii.tooltip.item.currency.amount", attachment.getAmount()).withColor(15066623));
             if (gui.aether$getOverlayMessageString() != null && gui.aether$getOverlayMessageTime() > 0) {
                 gui.aether$setOverlayMessageTime(30);

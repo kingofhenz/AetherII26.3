@@ -1,11 +1,12 @@
 package com.aetherteam.aetherii.advancement.trigger;
 
+import net.minecraft.world.level.storage.loot.predicates.LootItemCondition;
+import net.minecraft.core.Holder;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
-import net.minecraft.advancements.Criterion;
-import net.minecraft.advancements.criterion.ContextAwarePredicate;
-import net.minecraft.advancements.criterion.EntityPredicate;
-import net.minecraft.advancements.criterion.SimpleCriterionTrigger;
+import net.minecraft.advancements.triggers.Criterion;
+import net.minecraft.advancements.predicates.entity.EntityPredicate;
+import net.minecraft.advancements.triggers.SimpleCriterionTrigger;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.Entity;
 
@@ -21,18 +22,18 @@ public class IncubationTrigger extends SimpleCriterionTrigger<IncubationTrigger.
         this.trigger(player, (instance) -> instance.test(player, entity));
     }
 
-    public record Instance(Optional<ContextAwarePredicate> player, Optional<EntityPredicate> entity) implements SimpleInstance {
+    public record Instance(Optional<Holder<LootItemCondition>> player, Optional<EntityPredicate> entity) implements SimpleInstance {
         public static final Codec<IncubationTrigger.Instance> CODEC = RecordCodecBuilder.create(instance -> instance.group(
-                        EntityPredicate.ADVANCEMENT_CODEC.optionalFieldOf("player").forGetter(IncubationTrigger.Instance::player),
+                        LootItemCondition.CODEC.optionalFieldOf("player").forGetter(IncubationTrigger.Instance::player),
                         EntityPredicate.CODEC.optionalFieldOf("entity").forGetter(IncubationTrigger.Instance::entity))
                 .apply(instance, IncubationTrigger.Instance::new));
 
         public static Criterion<Instance> incubate() {
-            return AetherIIAdvancementTriggers.INCUBATION.get().createCriterion(new IncubationTrigger.Instance(Optional.empty(), Optional.empty()));
+            return AetherIIAdvancementTriggers.INCUBATION.createCriterion(new IncubationTrigger.Instance(Optional.empty(), Optional.empty()));
         }
 
         public static Criterion<Instance> incubateEntity(EntityPredicate entity) {
-            return AetherIIAdvancementTriggers.INCUBATION.get().createCriterion(new IncubationTrigger.Instance(Optional.empty(), Optional.of(entity)));
+            return AetherIIAdvancementTriggers.INCUBATION.createCriterion(new IncubationTrigger.Instance(Optional.empty(), Optional.of(entity)));
         }
 
         public boolean test(ServerPlayer serverPlayer, Entity entity) {

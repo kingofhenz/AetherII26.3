@@ -24,15 +24,9 @@ import net.minecraft.world.level.block.state.properties.EnumProperty;
 import net.minecraft.world.level.block.state.properties.IntegerProperty;
 
 public class MuralBlock extends BaseEntityBlock {
-    public static final MapCodec<MuralBlock> CODEC = simpleCodec(MuralBlock::new);
     public static final EnumProperty<Direction> HORIZONTAL_FACING = BlockStateProperties.HORIZONTAL_FACING;
     public static final IntegerProperty X_OFFSET = IntegerProperty.create("x_offset", 0, Mural.MAX_SIZE);
     public static final IntegerProperty Y_OFFSET = IntegerProperty.create("y_offset", 0, Mural.MAX_SIZE);
-
-    @Override
-    public MapCodec<MuralBlock> codec() {
-        return CODEC;
-    }
 
     public MuralBlock(BlockBehaviour.Properties properties) {
         super(properties);
@@ -55,12 +49,12 @@ public class MuralBlock extends BaseEntityBlock {
     }
 
     @Override
-    public ItemStack getCloneItemStack(LevelReader level, BlockPos pos, BlockState state, boolean includeData, Player player) {
+    protected ItemStack getCloneItemStack(LevelReader level, BlockPos pos, BlockState state, boolean includeData) {
         if (level.getBlockEntity(pos) instanceof MuralBlockEntity muralBlockEntity) {
             var mural = muralBlockEntity.getMural();
             return MuralBlockEntity.createMuralItem(mural.orElse(null), state.getValue(X_OFFSET), state.getValue(Y_OFFSET));
         } else {
-            return super.getCloneItemStack(level, pos, state, includeData, player);
+            return super.getCloneItemStack(level, pos, state, includeData);
         }
     }
 

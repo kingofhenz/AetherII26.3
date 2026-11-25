@@ -1,5 +1,6 @@
 package com.aetherteam.aetherii.block.natural;
 
+import net.minecraft.world.level.block.BonemealSource;
 import com.aetherteam.aetherii.block.AetherIIBlocks;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
@@ -14,7 +15,6 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.shapes.CollisionContext;
 import net.minecraft.world.phys.shapes.Shapes;
 import net.minecraft.world.phys.shapes.VoxelShape;
-import net.neoforged.neoforge.common.CommonHooks;
 
 public class BlueberryBushStemBlock extends AetherBushBlock implements BonemealableBlock {
     protected static final VoxelShape SHAPE = Block.box(2.0, 0.0, 2.0, 14.0, 13.0, 14.0);
@@ -25,9 +25,8 @@ public class BlueberryBushStemBlock extends AetherBushBlock implements Bonemeala
 
     @Override
     public void randomTick(BlockState state, ServerLevel level, BlockPos pos, RandomSource random) {
-        if (level.getRawBrightness(pos.above(), 0) >= 9 && CommonHooks.canCropGrow(level, pos, state, random.nextInt(10) == 0)) {
-            level.setBlockAndUpdate(pos, AetherIIBlocks.BLUEBERRY_BUSH.get().defaultBlockState());
-            CommonHooks.fireCropGrowPost(level, pos, state);
+        if (level.getRawBrightness(pos.above(), 0) >= 9 && (random.nextInt(10) == 0)) {
+            level.setBlockAndUpdate(pos, AetherIIBlocks.BLUEBERRY_BUSH.defaultBlockState());
         }
     }
 
@@ -37,17 +36,17 @@ public class BlueberryBushStemBlock extends AetherBushBlock implements Bonemeala
     }
 
     @Override
-    public void performBonemeal(ServerLevel level, RandomSource random, BlockPos pos, BlockState state) {
-        level.setBlockAndUpdate(pos, AetherIIBlocks.BLUEBERRY_BUSH.get().defaultBlockState());
+    public void performBonemeal(ServerLevel level, RandomSource random, BlockPos pos, BlockState state, BonemealSource source) {
+        level.setBlockAndUpdate(pos, AetherIIBlocks.BLUEBERRY_BUSH.defaultBlockState());
     }
 
     @Override
-    public boolean isBonemealSuccess(Level level, RandomSource random, BlockPos pos, BlockState state) {
+    public boolean isBonemealSuccess(Level level, RandomSource random, BlockPos pos, BlockState state, BonemealSource source) {
         return random.nextFloat() <= 0.875F;
     }
 
     @Override
-    public boolean isValidBonemealTarget(LevelReader level, BlockPos pos, BlockState state) {
+    public boolean isValidBonemealTarget(LevelReader level, BlockPos pos, BlockState state, BonemealSource source) {
         return true;
     }
 

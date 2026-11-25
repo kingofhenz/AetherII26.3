@@ -42,7 +42,6 @@ import java.util.Optional;
 import java.util.function.BiPredicate;
 
 public class SentryCrateBlock extends BaseEntityBlock implements MimicOption {
-    public static final MapCodec<SentryCrateBlock> CODEC = simpleCodec(SentryCrateBlock::new);
     public static final EnumProperty<Direction> FACING = HorizontalDirectionalBlock.FACING;
     public static final BooleanProperty OPEN = BlockStateProperties.OPEN;
     public static final EnumProperty<ChestType> TYPE = BlockStateProperties.CHEST_TYPE;
@@ -105,11 +104,6 @@ public class SentryCrateBlock extends BaseEntityBlock implements MimicOption {
         }
     };
 
-    @Override
-    public MapCodec<SentryCrateBlock> codec() {
-        return CODEC;
-    }
-
     public SentryCrateBlock(BlockBehaviour.Properties properties) {
         super(properties);
         this.registerDefaultState(this.stateDefinition.any().setValue(FACING, Direction.NORTH).setValue(OPEN, false).setValue(TYPE, ChestType.SINGLE).setValue(WATERLOGGED, false));
@@ -124,7 +118,7 @@ public class SentryCrateBlock extends BaseEntityBlock implements MimicOption {
     @Nullable
     @Override
     public <T extends BlockEntity> BlockEntityTicker<T> getTicker(Level level, BlockState state, BlockEntityType<T> type) {
-        return level.isClientSide() ? createTickerHelper(type, AetherIIBlockEntityTypes.SENTRY_CRATE.get(), SentryCrateBlockEntity::clientTick) : null;
+        return level.isClientSide() ? createTickerHelper(type, AetherIIBlockEntityTypes.SENTRY_CRATE, SentryCrateBlockEntity::clientTick) : null;
     }
 
     @Override
@@ -240,7 +234,7 @@ public class SentryCrateBlock extends BaseEntityBlock implements MimicOption {
         } else {
             predicate = ChestBlock::isChestBlockedAt;
         }
-        return DoubleBlockCombiner.combineWithNeigbour(AetherIIBlockEntityTypes.SENTRY_CRATE.get(), ChestBlock::getBlockType, ChestBlock::getConnectedDirection, FACING, state, level, pos, predicate);
+        return DoubleBlockCombiner.combineWithNeigbour(AetherIIBlockEntityTypes.SENTRY_CRATE, ChestBlock::getBlockType, ChestBlock::getConnectedDirection, FACING, state, level, pos, predicate);
     }
 
     @Override
@@ -248,10 +242,6 @@ public class SentryCrateBlock extends BaseEntityBlock implements MimicOption {
         return false;
     }
 
-    @Override
-    public int getLightEmission(BlockState state, BlockGetter level, BlockPos pos) {
-        return state.getValue(OPEN) ? super.getLightEmission(state, level, pos) : 0;
-    }
 
     @Override
     protected boolean isSignalSource(BlockState state) {

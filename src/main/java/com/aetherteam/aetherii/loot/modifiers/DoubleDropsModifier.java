@@ -20,8 +20,8 @@ import net.minecraft.world.level.storage.loot.LootContext;
 import net.minecraft.world.level.storage.loot.parameters.LootContextParams;
 import net.minecraft.world.level.storage.loot.predicates.LootItemCondition;
 import net.minecraft.world.phys.Vec3;
-import net.neoforged.neoforge.common.loot.IGlobalLootModifier;
-import net.neoforged.neoforge.common.loot.LootModifier;
+import com.aetherteam.aetherii.nitrogen.loot.modifiers.IGlobalLootModifier;
+import com.aetherteam.aetherii.nitrogen.loot.modifiers.LootModifier;
 
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -38,13 +38,13 @@ public class DoubleDropsModifier extends LootModifier {
         ObjectArrayList<ItemStack> newStacks = new ObjectArrayList<>(lootStacks);
 
         // Tools
-        BlockState targetState = context.getOptionalParameter(LootContextParams.BLOCK_STATE);
-        Vec3 targetPos = context.getOptionalParameter(LootContextParams.ORIGIN);
-        ItemInstance tool = context.getOptionalParameter(LootContextParams.TOOL);
+        BlockState targetState = context.getOptional(LootContextParams.BLOCK_STATE);
+        Vec3 targetPos = context.getOptional(LootContextParams.ORIGIN);
+        ItemInstance tool = context.getOptional(LootContextParams.TOOL);
 
         // Weapons
-        Entity targetEntity = context.getOptionalParameter(LootContextParams.THIS_ENTITY);
-        Entity attacker = context.getOptionalParameter(LootContextParams.DIRECT_ATTACKING_ENTITY);
+        Entity targetEntity = context.getOptional(LootContextParams.THIS_ENTITY);
+        Entity attacker = context.getOptional(LootContextParams.DIRECT_ATTACKING_ENTITY);
 
         if (targetState != null && targetPos != null) {
 

@@ -1,5 +1,7 @@
 package com.aetherteam.aetherii.block.natural;
 
+import net.minecraft.world.level.levelgen.feature.Feature;
+import net.minecraft.world.level.block.BonemealSource;
 import com.aetherteam.aetherii.data.resources.registries.AetherIIBlockIds;
 import com.aetherteam.aetherii.block.AetherIIBlocks;
 import com.aetherteam.aetherii.data.resources.registries.holyisles.HolyIslesPlacedFeatures;
@@ -21,7 +23,6 @@ import net.minecraft.world.level.biome.Biome;
 import net.minecraft.world.level.block.*;
 import net.minecraft.world.level.block.state.BlockBehaviour;
 import net.minecraft.world.level.block.state.BlockState;
-import net.minecraft.world.level.levelgen.feature.ConfiguredFeature;
 import net.minecraft.world.level.levelgen.placement.PlacedFeature;
 import net.minecraft.world.level.lighting.LightEngine;
 
@@ -32,21 +33,16 @@ import java.util.Optional;
  * Based on {@link net.minecraft.world.level.block.GrassBlock}.
  */
 public class AetherGrassBlock extends SpreadingSnowyBlock implements BonemealableBlock {
-    public static final MapCodec<AetherGrassBlock> CODEC = simpleCodec(AetherGrassBlock::new);
-
-    public MapCodec<AetherGrassBlock> codec() {
-        return CODEC;
-    }
 
     public AetherGrassBlock(BlockBehaviour.Properties properties) {
         super(properties, AetherIIBlockIds.AETHER_DIRT);
     }
 
-    public boolean isValidBonemealTarget(LevelReader level, BlockPos pos, BlockState state) {
+    public boolean isValidBonemealTarget(LevelReader level, BlockPos pos, BlockState state, BonemealSource source) {
         return level.getBlockState(pos.above()).isAir() && level.isInsideBuildHeight(pos.above());
     }
 
-    public boolean isBonemealSuccess(Level level, RandomSource random, BlockPos pos, BlockState state) {
+    public boolean isBonemealSuccess(Level level, RandomSource random, BlockPos pos, BlockState state, BonemealSource source) {
         return true;
     }
 
@@ -57,13 +53,13 @@ public class AetherGrassBlock extends SpreadingSnowyBlock implements Bonemealabl
     @Override
     public void randomTick(BlockState state, ServerLevel level, BlockPos pos, RandomSource random) {
         if (!canBeGrass(state, level, pos)) {
-            if (!level.isAreaLoaded(pos, 1)) {
+            if (!level.hasChunksAt(pos.offset(-1, -1, -1), pos.offset(1, 1, 1))) {
                 return;
             }
 
-            level.setBlockAndUpdate(pos, AetherIIBlocks.AETHER_DIRT.get().defaultBlockState());
+            level.setBlockAndUpdate(pos, AetherIIBlocks.AETHER_DIRT.defaultBlockState());
         } else {
-            if (!level.isAreaLoaded(pos, 3)) {
+            if (!level.hasChunksAt(pos.offset(-3, -3, -3), pos.offset(3, 3, 3))) {
                 return;
             }
 
@@ -72,7 +68,7 @@ public class AetherGrassBlock extends SpreadingSnowyBlock implements Bonemealabl
 
                 for (int i = 0; i < 4; ++i) {
                     BlockPos offsetPos = pos.offset(random.nextInt(3) - 1, random.nextInt(5) - 3, random.nextInt(3) - 1);
-                    if (level.getBlockState(offsetPos).is(AetherIIBlocks.AETHER_DIRT.get()) && canPropagate(defaultState, level, offsetPos)) {
+                    if (level.getBlockState(offsetPos).is(AetherIIBlocks.AETHER_DIRT) && canPropagate(defaultState, level, offsetPos)) {
                         level.setBlockAndUpdate(offsetPos, defaultState.setValue(SNOWY, isSnowySetting(level.getBlockState(offsetPos.above()))));
                     }
                 }
@@ -88,7 +84,7 @@ public class AetherGrassBlock extends SpreadingSnowyBlock implements Bonemealabl
         } else if (aboveState.getFluidState().getAmount() == 8) {
             return false;
         } else {
-            int i = LightEngine.getLightBlockInto(state, aboveState, Direction.UP, aboveState.getLightDampening());
+            int i = LightEngine.getLightDampeningInto(state, aboveState, Direction.UP, aboveState.getLightDampening());
             return i < 15;
         }
     }
@@ -99,9 +95,9 @@ public class AetherGrassBlock extends SpreadingSnowyBlock implements Bonemealabl
     }
 
     @Override
-    public void performBonemeal(ServerLevel level, RandomSource random, BlockPos pos, BlockState state) {
+    public void performBonemeal(ServerLevel level, RandomSource random, BlockPos pos, BlockState state, BonemealSource source) {
         BlockPos above = pos.above();
-        BlockState grass = AetherIIBlocks.SHORT_AETHER_GRASS.get().defaultBlockState();
+        BlockState grass = AetherIIBlocks.SHORT_AETHER_GRASS.defaultBlockState();
         Optional<Holder.Reference<PlacedFeature>> grassFeature = level.registryAccess().lookupOrThrow(Registries.PLACED_FEATURE).get(HolyIslesPlacedFeatures.AETHER_GRASS_BONEMEAL);
 
         label47:
@@ -118,16 +114,16 @@ public class AetherGrassBlock extends SpreadingSnowyBlock implements Bonemealabl
             BlockState testState = level.getBlockState(testPos);
             if (testState.is(grass.getBlock()) && random.nextInt(10) == 0) {
                 BonemealableBlock bonemealableBlock = (BonemealableBlock) grass.getBlock();
-                if (bonemealableBlock.isValidBonemealTarget(level, testPos, testState)) {
-                    bonemealableBlock.performBonemeal(level, random, testPos, testState);
+                if (bonemealableBlock.isValidBonemealTarget(level, testPos, testState, BonemealSource.INTERACTION)) {
+                    bonemealableBlock.performBonemeal(level, random, testPos, testState, BonemealSource.INTERACTION);
                 }
             }
 
             if (testState.isAir() && !level.isOutsideBuildHeight(testPos)) {
                 if (random.nextInt(8) == 0) {
-                    List<ConfiguredFeature<?, ?>> features = level.getBiome(testPos).value().getGenerationSettings().getBoneMealFeatures();
+                    List<Feature> features = level.getBiome(testPos).value().getGenerationSettings().getBoneMealFeatures();
                     if (!features.isEmpty()) {
-                        ConfiguredFeature<?, ?> placementFeature = Util.getRandom(features, random);
+                        Feature placementFeature = Util.getRandom(features, random);
                         placementFeature.place(level, level.getChunkSource().getGenerator(), random, testPos);
                     }
                 } else if (grassFeature.isPresent()) {
@@ -168,7 +164,7 @@ public class AetherGrassBlock extends SpreadingSnowyBlock implements Bonemealabl
         if (!biome.warmEnoughToRain(pos, level.getSeaLevel())) {
             if (pos.getY() >= level.getMinY() && pos.getY() < level.getMaxY() && level.getBrightness(LightLayer.BLOCK, pos) < 10) {
                 BlockState blockState = level.getBlockState(pos);
-                return ((blockState.isAir() || blockState.is(AetherIIBlocks.ARCTIC_SNOW)) && AetherIIBlocks.ARCTIC_SNOW.get().defaultBlockState().canSurvive(level, pos)) || AetherGrassBlock.plantNotSnowed(blockState);
+                return ((blockState.isAir() || blockState.is(AetherIIBlocks.ARCTIC_SNOW)) && AetherIIBlocks.ARCTIC_SNOW.defaultBlockState().canSurvive(level, pos)) || AetherGrassBlock.plantNotSnowed(blockState);
             }
         }
         return false;

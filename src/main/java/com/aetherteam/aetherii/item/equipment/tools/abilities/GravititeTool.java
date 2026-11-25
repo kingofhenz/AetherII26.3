@@ -1,5 +1,6 @@
 package com.aetherteam.aetherii.item.equipment.tools.abilities;
 
+import net.minecraft.world.item.component.SwingAnimation;
 import com.aetherteam.aetherii.AetherIITags;
 import com.aetherteam.aetherii.attachment.AetherIIDataAttachments;
 import com.aetherteam.aetherii.attachment.player.AbilityBehaviorAttachment;
@@ -15,7 +16,9 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.BlockStateProperties;
 import net.minecraft.world.level.block.state.properties.ChestType;
 
-public interface GravititeTool {
+import com.aetherteam.aetherii.item.CustomEnchantmentItem;
+
+public interface GravititeTool extends CustomEnchantmentItem {
     default boolean levitateBlock(UseOnContext context) {
         Level level = context.getLevel();
         BlockPos blockPos = context.getClickedPos();
@@ -30,7 +33,7 @@ public interface GravititeTool {
                         && (!blockState.hasProperty(BlockStateProperties.CHEST_TYPE) || blockState.getValue(BlockStateProperties.CHEST_TYPE) == ChestType.SINGLE)
                         && (!blockState.hasProperty(BlockStateProperties.EXTENDED) || !blockState.getValue(BlockStateProperties.EXTENDED))
                         && !blockState.is(AetherIITags.Blocks.GRAVITITE_ABILITY_BLACKLIST)) {
-                    AbilityBehaviorAttachment attachment = player.getData(AetherIIDataAttachments.ABILITY_BEHAVIOR);
+                    AbilityBehaviorAttachment attachment = player.getAttachedOrCreate(AetherIIDataAttachments.ABILITY_BEHAVIOR);
                     if (!attachment.isGravititeHoldingFloatingBlock()) {
                         attachment.setGravititeHoldingFloatingBlock(true);
                         if (!level.isClientSide()) {
@@ -47,7 +50,7 @@ public interface GravititeTool {
                             level.removeBlock(blockPos, false);
                             itemStack.hurtAndBreak(4, player, hand);
                         } else {
-                            player.swing(hand);
+                            player.swing(hand, SwingAnimation.DEFAULT, false);
                         }
                         return true;
                     }

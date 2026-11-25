@@ -7,7 +7,6 @@ import com.aetherteam.aetherii.client.renderer.entity.state.SliderRenderState;
 import com.aetherteam.aetherii.entity.monster.dungeon.DetonationSentry;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
-import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.SubmitNodeCollector;
 import net.minecraft.client.renderer.entity.RenderLayerParent;
 import net.minecraft.client.renderer.entity.layers.EyesLayer;
@@ -58,9 +57,9 @@ public class DetonationSentryEmissivesLayer extends EyesLayer<DetonationSentryRe
             rune = RUNE_RED;
         }
 
-        collector.order(1).submitModel(this.getParentModel(), renderState, poseStack, eye, light, OverlayTexture.NO_OVERLAY, -1, null, renderState.outlineColor, null);
-        collector.order(1).submitModel(this.getParentModel(), renderState, poseStack, rune, light, OverlayTexture.NO_OVERLAY, -1, null, renderState.outlineColor, null);
-        collector.order(1).submitModel(this.getParentModel(), renderState, poseStack, timer, light, OverlayTexture.NO_OVERLAY, -1, null, renderState.outlineColor, null);
+        collector.order(1).submitModel(this.getParentModel(), renderState, poseStack, eye, light, OverlayTexture.NO_OVERLAY, -1, null, renderState.outlineColor);
+        collector.order(1).submitModel(this.getParentModel(), renderState, poseStack, rune, light, OverlayTexture.NO_OVERLAY, -1, null, renderState.outlineColor);
+        collector.order(1).submitModel(this.getParentModel(), renderState, poseStack, timer, light, OverlayTexture.NO_OVERLAY, -1, null, renderState.outlineColor);
     }
 
     @Override

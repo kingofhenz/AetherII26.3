@@ -1,5 +1,6 @@
 package com.aetherteam.aetherii.block.natural;
 
+import net.minecraft.world.level.block.BonemealSource;
 import com.aetherteam.aetherii.AetherII;
 import com.aetherteam.aetherii.block.AetherIIBlocks;
 import net.minecraft.core.BlockPos;
@@ -22,6 +23,7 @@ import net.minecraft.world.phys.shapes.VoxelShape;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.Locale;
+import java.util.function.BiConsumer;
 
 public class AetherTallGrassBlock extends TallGrassBlock implements Snowable {
     protected static final VoxelShape SHORT_SHAPE = Block.box(2.0, 0.0, 2.0, 14.0, 7.0, 14.0);
@@ -57,16 +59,16 @@ public class AetherTallGrassBlock extends TallGrassBlock implements Snowable {
     }
 
     @Override
-    public boolean isValidBonemealTarget(LevelReader level, BlockPos pos, BlockState state) {
-        return !state.is(AetherIIBlocks.TALL_AETHER_GRASS.get());
+    public boolean isValidBonemealTarget(LevelReader level, BlockPos pos, BlockState state, BonemealSource source) {
+        return !state.is(AetherIIBlocks.TALL_AETHER_GRASS);
     }
 
     @Override
-    public void performBonemeal(ServerLevel level, RandomSource random, BlockPos pos, BlockState state) {
+    public void performBonemeal(ServerLevel level, RandomSource random, BlockPos pos, BlockState state, BonemealSource source) {
         if (state.is(AetherIIBlocks.SHORT_AETHER_GRASS)) {
-            level.setBlock(pos, AetherIIBlocks.MEDIUM_AETHER_GRASS.get().withPropertiesOf(state), 2);
+            level.setBlock(pos, AetherIIBlocks.MEDIUM_AETHER_GRASS.withPropertiesOf(state), 2);
         } else if (state.is(AetherIIBlocks.MEDIUM_AETHER_GRASS)) {
-            level.setBlock(pos, AetherIIBlocks.TALL_AETHER_GRASS.get().withPropertiesOf(state), 2);
+            level.setBlock(pos, AetherIIBlocks.TALL_AETHER_GRASS.withPropertiesOf(state), 2);
         }
     }
 
@@ -74,15 +76,15 @@ public class AetherTallGrassBlock extends TallGrassBlock implements Snowable {
     public void destroy(LevelAccessor level, BlockPos pos, BlockState state) {
         super.destroy(level, pos, state);
         if (this.isSnowy(state)) {
-            level.setBlock(pos, AetherIIBlocks.ARCTIC_SNOW.get().defaultBlockState(), 1 | 2);
+            level.setBlock(pos, AetherIIBlocks.ARCTIC_SNOW.defaultBlockState(), 1 | 2);
         }
     }
 
     @Override
-    public void onBlockExploded(BlockState state, ServerLevel level, BlockPos pos, Explosion explosion) {
-        super.onBlockExploded(state, level, pos, explosion);
+    protected void onExplosionHit(BlockState state, ServerLevel level, BlockPos pos, Explosion explosion, BiConsumer<ItemStack, BlockPos> onHit) {
+        super.onExplosionHit(state, level, pos, explosion, onHit);
         if (this.isSnowy(state)) {
-            level.setBlock(pos, AetherIIBlocks.ARCTIC_SNOW.get().defaultBlockState(), 1 | 2);
+            level.setBlock(pos, AetherIIBlocks.ARCTIC_SNOW.defaultBlockState(), 1 | 2);
         }
     }
 

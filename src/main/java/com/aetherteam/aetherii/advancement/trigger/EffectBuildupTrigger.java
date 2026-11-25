@@ -1,15 +1,15 @@
 package com.aetherteam.aetherii.advancement.trigger;
 
+import net.minecraft.world.level.storage.loot.predicates.LootItemCondition;
+import net.minecraft.core.registries.codec.RegistryCodecs;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
-import net.minecraft.advancements.Criterion;
-import net.minecraft.advancements.criterion.ContextAwarePredicate;
-import net.minecraft.advancements.criterion.EntityPredicate;
-import net.minecraft.advancements.criterion.SimpleCriterionTrigger;
+import net.minecraft.advancements.triggers.Criterion;
+import net.minecraft.advancements.predicates.entity.EntityPredicate;
+import net.minecraft.advancements.triggers.SimpleCriterionTrigger;
 import net.minecraft.core.Holder;
 import net.minecraft.core.HolderSet;
 import net.minecraft.core.registries.Registries;
-import net.minecraft.resources.HolderSetCodec;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.effect.MobEffect;
 import net.minecraft.world.entity.Entity;
@@ -26,17 +26,17 @@ public class EffectBuildupTrigger extends SimpleCriterionTrigger<EffectBuildupTr
         this.trigger(player, (instance) -> instance.test(player, source, target, effect, triggered));
     }
 
-    public record Instance(Optional<ContextAwarePredicate> player, Optional<EntityPredicate> directSource, Optional<EntityPredicate> target, HolderSet<MobEffect> mobEffects, boolean triggered) implements SimpleInstance {
+    public record Instance(Optional<Holder<LootItemCondition>> player, Optional<EntityPredicate> directSource, Optional<EntityPredicate> target, HolderSet<MobEffect> mobEffects, boolean triggered) implements SimpleInstance {
         public static final Codec<EffectBuildupTrigger.Instance> CODEC = RecordCodecBuilder.create(instance -> instance.group(
-                        EntityPredicate.ADVANCEMENT_CODEC.optionalFieldOf("player").forGetter(EffectBuildupTrigger.Instance::player),
+                        LootItemCondition.CODEC.optionalFieldOf("player").forGetter(EffectBuildupTrigger.Instance::player),
                         EntityPredicate.CODEC.optionalFieldOf("direct_source").forGetter(EffectBuildupTrigger.Instance::directSource),
                         EntityPredicate.CODEC.optionalFieldOf("target").forGetter(EffectBuildupTrigger.Instance::target),
-                        HolderSetCodec.create(Registries.MOB_EFFECT, MobEffect.CODEC, false).fieldOf("mob_effects").forGetter(EffectBuildupTrigger.Instance::mobEffects),
+                        RegistryCodecs.holderSet(Registries.MOB_EFFECT).fieldOf("mob_effects").forGetter(EffectBuildupTrigger.Instance::mobEffects),
                         Codec.BOOL.fieldOf("triggered").forGetter(EffectBuildupTrigger.Instance::triggered))
                 .apply(instance, EffectBuildupTrigger.Instance::new));
 
         public static Criterion<EffectBuildupTrigger.Instance> effect(Optional<EntityPredicate> directSource, Optional<EntityPredicate> target, HolderSet<MobEffect> mobEffects, boolean triggered) {
-            return AetherIIAdvancementTriggers.EFFECT_BUILDUP.get().createCriterion(new EffectBuildupTrigger.Instance(Optional.empty(), directSource, target, mobEffects, triggered));
+            return AetherIIAdvancementTriggers.EFFECT_BUILDUP.createCriterion(new EffectBuildupTrigger.Instance(Optional.empty(), directSource, target, mobEffects, triggered));
         }
 
         public boolean test(ServerPlayer serverPlayer, Entity directSource, Entity target, Holder<MobEffect> effect, boolean triggered) {

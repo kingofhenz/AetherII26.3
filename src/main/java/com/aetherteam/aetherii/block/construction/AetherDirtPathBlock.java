@@ -6,12 +6,12 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.item.context.BlockPlaceContext;
 import net.minecraft.world.level.block.Block;
-import net.minecraft.world.level.block.DirtPathBlock;
+import net.minecraft.world.level.block.PathBlock;
 import net.minecraft.world.level.block.state.BlockState;
 
-public class AetherDirtPathBlock extends DirtPathBlock {
+public class AetherDirtPathBlock extends PathBlock {
     public AetherDirtPathBlock(Properties properties) {
-        super(properties);
+        super(AetherIIBlocks.AETHER_DIRT, properties);
     }
 
     /**
@@ -19,7 +19,7 @@ public class AetherDirtPathBlock extends DirtPathBlock {
      */
     @Override
     public BlockState getStateForPlacement(BlockPlaceContext context) {
-        return !this.defaultBlockState().canSurvive(context.getLevel(), context.getClickedPos()) ? Block.pushEntitiesUp(this.defaultBlockState(), AetherIIBlocks.AETHER_DIRT.get().defaultBlockState(), context.getLevel(), context.getClickedPos()) : this.defaultBlockState();
+        return !this.defaultBlockState().canSurvive(context.getLevel(), context.getClickedPos()) ? Block.pushEntitiesUp(this.defaultBlockState(), AetherIIBlocks.AETHER_DIRT.defaultBlockState(), context.getLevel(), context.getClickedPos()) : this.defaultBlockState();
     }
 
     /**

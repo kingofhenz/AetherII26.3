@@ -4,7 +4,6 @@ import com.aetherteam.aetherii.client.renderer.entity.model.QuadrupedWingsModel;
 import com.aetherteam.aetherii.client.renderer.entity.state.WingEntityRenderState;
 import com.mojang.blaze3d.vertex.PoseStack;
 import net.minecraft.client.model.QuadrupedModel;
-import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.SubmitNodeCollector;
 import net.minecraft.client.renderer.entity.LivingEntityRenderer;
 import net.minecraft.client.renderer.entity.RenderLayerParent;
@@ -41,7 +40,7 @@ public class QuadrupedWingsLayer<T extends WingEntityRenderState, M extends Quad
             }
             this.wings.setupAnim(entity);
 
-            submitNodeCollector.submitModel(this.wings, entity, poseStack, RenderTypes.entityCutout(this.resourceLocation), packedLight, LivingEntityRenderer.getOverlayCoords(entity, 0.0F), -1, null);
+            submitNodeCollector.submitModel(this.wings, entity, poseStack, RenderTypes.entityCutout(this.resourceLocation), packedLight, LivingEntityRenderer.getOverlayCoords(entity, 0.0F), -1);
         }
     }
 }

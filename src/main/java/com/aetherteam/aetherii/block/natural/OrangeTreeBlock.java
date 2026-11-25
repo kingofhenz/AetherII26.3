@@ -1,5 +1,7 @@
 package com.aetherteam.aetherii.block.natural;
 
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.level.block.BonemealSource;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.server.level.ServerLevel;
@@ -23,7 +25,7 @@ import net.minecraft.world.level.material.FluidState;
 import net.minecraft.world.level.material.Fluids;
 import net.minecraft.world.phys.shapes.CollisionContext;
 import net.minecraft.world.phys.shapes.VoxelShape;
-import net.neoforged.neoforge.common.CommonHooks;
+import java.util.function.BiConsumer;
 
 import javax.annotation.Nullable;
 
@@ -105,7 +107,7 @@ public class OrangeTreeBlock extends AetherBushBlock implements BonemealableBloc
     public void randomTick(BlockState state, ServerLevel level, BlockPos pos, RandomSource random) {
         DoubleBlockHalf doubleBlockHalf = state.getValue(HALF);
         int age = state.getValue(AGE);
-        if (age < DOUBLE_AGE_MAX && level.getRawBrightness(pos.above(), 0) >= 9 && CommonHooks.canCropGrow(level, pos, state, random.nextInt(15) == 0)) { // Whether the Orange Tree is able to grow.
+        if (age < DOUBLE_AGE_MAX && level.getRawBrightness(pos.above(), 0) >= 9 && (random.nextInt(15) == 0)) { // Whether the Orange Tree is able to grow.
             age += 1;
             BlockState blockState = state.setValue(AGE, age);
             if (age > SINGLE_AGE_MAX && doubleBlockHalf == DoubleBlockHalf.LOWER) { // Growing for the double block state.
@@ -114,7 +116,6 @@ public class OrangeTreeBlock extends AetherBushBlock implements BonemealableBloc
                 level.setBlock(pos, blockState, 2);
             }
             level.gameEvent(GameEvent.BLOCK_CHANGE, pos, GameEvent.Context.of(blockState));
-            CommonHooks.fireCropGrowPost(level, pos, state);
         }
     }
 
@@ -164,7 +165,7 @@ public class OrangeTreeBlock extends AetherBushBlock implements BonemealableBloc
      * @param tool The {@link ItemStack} of the tool used to destroy the block.
      */
     @Override
-    public void playerDestroy(Level level, Player player, BlockPos pos, BlockState state, @Nullable BlockEntity blockEntity, ItemStack tool) {
+    public void playerDestroy(ServerLevel level, ServerPlayer player, BlockPos pos, BlockState state, @Nullable BlockEntity blockEntity, ItemStack tool) {
         DoubleBlockHalf doubleBlockHalf = state.getValue(HALF);
         int age = state.getValue(AGE);
         if (age > SINGLE_AGE_MAX) { // Destroying for the double block state.
@@ -180,14 +181,12 @@ public class OrangeTreeBlock extends AetherBushBlock implements BonemealableBloc
         }
     }
 
-    @Override
-    public boolean onDestroyedByPlayer(BlockState state, Level level, BlockPos pos, Player player, ItemStack toolStack, boolean willHarvest, FluidState fluid) {
-        DoubleBlockHalf doubleBlockHalf = state.getValue(HALF);
-        int age = state.getValue(AGE);
-        if (doubleBlockHalf == DoubleBlockHalf.UPPER && age == DOUBLE_AGE_MAX) {
-            return true;
-        }
-        return super.onDestroyedByPlayer(state, level, pos, player, toolStack, willHarvest, fluid);
+    /**
+     * NeoForge's {@code onDestroyedByPlayer}: breaking the top of a fully grown tree only harvests the oranges, the
+     * block itself stays (see {@link com.aetherteam.aetherii.AetherIIEventListeners} - {@code PlayerBlockBreakEvents.BEFORE}).
+     */
+    public static boolean keepsBlockOnBreak(BlockState state) {
+        return state.getValue(HALF) == DoubleBlockHalf.UPPER && state.getValue(AGE) == DOUBLE_AGE_MAX;
     }
 
     /**
@@ -198,8 +197,8 @@ public class OrangeTreeBlock extends AetherBushBlock implements BonemealableBloc
      * @param explosion The {@link Explosion} affecting the block.
      */
     @Override
-    public void onBlockExploded(BlockState state, ServerLevel level, BlockPos pos, Explosion explosion) {
-        super.onBlockExploded(state, level, pos, explosion);
+    protected void onExplosionHit(BlockState state, ServerLevel level, BlockPos pos, Explosion explosion, BiConsumer<ItemStack, BlockPos> onHit) {
+        super.onExplosionHit(state, level, pos, explosion, onHit);
         int age = state.getValue(AGE);
         if (age == DOUBLE_AGE_MAX) {
             OrangeTreeBlock.placeAt(level, state.setValue(AGE, age - 1), pos, 2);
@@ -239,7 +238,7 @@ public class OrangeTreeBlock extends AetherBushBlock implements BonemealableBloc
      * @param state The {@link BlockState} of the block.
      */
     @Override
-    public void performBonemeal(ServerLevel level, RandomSource random, BlockPos pos, BlockState state) {
+    public void performBonemeal(ServerLevel level, RandomSource random, BlockPos pos, BlockState state, BonemealSource source) {
         DoubleBlockHalf doubleBlockHalf = state.getValue(HALF);
         int i = Math.min(DOUBLE_AGE_MAX, state.getValue(AGE) + 1);
         if (i > SINGLE_AGE_MAX && (level.isEmptyBlock(pos.above()) || level.getBlockState(pos.above()).is(this))) { // Growing for the double block state.
@@ -261,7 +260,7 @@ public class OrangeTreeBlock extends AetherBushBlock implements BonemealableBloc
      * @return A {@link Boolean} of whether using Bone Meal was successful.
      */
     @Override
-    public boolean isBonemealSuccess(Level level, RandomSource random, BlockPos pos, BlockState state) {
+    public boolean isBonemealSuccess(Level level, RandomSource random, BlockPos pos, BlockState state, BonemealSource source) {
         return random.nextFloat() <= 0.75F;
     }
 
@@ -273,7 +272,7 @@ public class OrangeTreeBlock extends AetherBushBlock implements BonemealableBloc
      * @return Whether this block is valid to use bone meal on, as a {@link Boolean}.
      */
     @Override
-    public boolean isValidBonemealTarget(LevelReader level, BlockPos pos, BlockState state) {
+    public boolean isValidBonemealTarget(LevelReader level, BlockPos pos, BlockState state, BonemealSource source) {
         return state.getValue(AGE) < DOUBLE_AGE_MAX;
     }
 

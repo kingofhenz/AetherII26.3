@@ -1,7 +1,7 @@
 package com.aetherteam.aetherii.data.resources.registries;
 
+import net.minecraft.util.ARGB;
 import com.aetherteam.aetherii.AetherII;
-import com.aetherteam.aetherii.client.renderer.AetherIIDimensionRenderers;
 import com.aetherteam.aetherii.data.resources.builders.worldgen.holyisles.HolyIslesBiomeSourceBuilders;
 import net.minecraft.core.HolderGetter;
 import net.minecraft.core.registries.Registries;
@@ -25,7 +25,6 @@ import net.minecraft.world.level.dimension.LevelStem;
 import net.minecraft.world.level.levelgen.NoiseBasedChunkGenerator;
 import net.minecraft.world.level.levelgen.NoiseGeneratorSettings;
 import net.minecraft.world.timeline.Timeline;
-import net.neoforged.neoforge.common.world.NeoForgeEnvironmentAttributes;
 
 import java.util.Optional;
 
@@ -52,22 +51,20 @@ public class AetherIIDimensions {
                 -32,
                 416,
                 416,
-                BlockTags.INFINIBURN_OVERWORLD,
+                context.lookup(Registries.BLOCK).getOrThrow(BlockTags.INFINIBURN_OVERWORLD),
                 0.0F,
                 new DimensionType.MonsterSettings(UniformInt.of(0, 7), 0),
                 DimensionType.Skybox.OVERWORLD,
                 CardinalLighting.Type.DEFAULT,
                 EnvironmentAttributeMap.builder()
-                        .set(EnvironmentAttributes.CLOUD_COLOR, -1)
+                        // Fully transparent cloud color disables the vanilla cloud layer; the Aether is a sky dimension with its own cloud sea.
+                        .set(EnvironmentAttributes.CLOUD_COLOR, ARGB.vector4fFromARGB32(0))
                         .set(EnvironmentAttributes.CLOUD_HEIGHT, 320.33F)
                         .set(EnvironmentAttributes.BED_RULE, BedRule.CAN_SLEEP_WHEN_DARK)
                         .set(EnvironmentAttributes.RESPAWN_ANCHOR_WORKS, false)
                         .set(EnvironmentAttributes.NETHER_PORTAL_SPAWNS_PIGLINS, true)
-                        .set(NeoForgeEnvironmentAttributes.CUSTOM_SKYBOX, AetherIIDimensionRenderers.HOLY_ISLES_SKY_ID)
-                        .set(NeoForgeEnvironmentAttributes.CUSTOM_WEATHER_EFFECTS, AetherIIDimensionRenderers.HOLY_ISLES_WEATHER_ID)
-                        .set(NeoForgeEnvironmentAttributes.CUSTOM_CLOUDS, AetherIIDimensionRenderers.HOLY_ISLES_CLOUDS_ID)
-                        .set(EnvironmentAttributes.BLOCK_LIGHT_TINT, 0x9E9C7A)
-                        .set(EnvironmentAttributes.AMBIENT_LIGHT_COLOR, 0X0A0A0A)
+                        .set(EnvironmentAttributes.BLOCK_LIGHT_TINT, ARGB.vector3fFromRGB24(0x9E9C7A))
+                        .set(EnvironmentAttributes.AMBIENT_LIGHT_COLOR, ARGB.vector3fFromRGB24(0x0A0A0A))
                         .build(),
                 timelines.getOrThrow(TimelineTags.IN_OVERWORLD),
                 Optional.of(clocks.getOrThrow(WorldClocks.OVERWORLD))));

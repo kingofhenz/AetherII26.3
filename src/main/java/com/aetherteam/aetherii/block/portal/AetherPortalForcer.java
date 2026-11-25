@@ -20,13 +20,15 @@ import net.minecraft.world.level.block.state.properties.BlockStateProperties;
 import net.minecraft.world.level.border.WorldBorder;
 import net.minecraft.world.level.levelgen.Heightmap;
 import net.minecraft.world.level.portal.TeleportTransition;
-import net.neoforged.neoforge.network.PacketDistributor;
+import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 
 import java.util.Comparator;
 import java.util.Optional;
 
 public class AetherPortalForcer {
     public static final TeleportTransition.PostTeleportTransition PLAY_PORTAL_SOUND = AetherPortalForcer::playPortalSound;
+
+    private static final int[] SEARCH_RADII = {16, 48, 128};
 
     private final ServerLevel level;
 
@@ -36,7 +38,7 @@ public class AetherPortalForcer {
 
     private static void playPortalSound(Entity entity) {
         if (entity instanceof ServerPlayer serverplayer) {
-            PacketDistributor.sendToPlayer(serverplayer, new PortalTravelSoundPacket());
+            ServerPlayNetworking.send(serverplayer, new PortalTravelSoundPacket());
         }
     }
 
@@ -64,7 +66,11 @@ public class AetherPortalForcer {
         int i = Math.min(this.level.getMaxY(), this.level.getMinY() + this.level.getLogicalHeight()) - 1;
         BlockPos.MutableBlockPos mutablePos = pos.mutable();
 
-        for (BlockPos.MutableBlockPos mutablePos1 : BlockPos.spiralAround(pos, 128, Direction.EAST, Direction.SOUTH)) {
+        // Search close to the target first, like vanilla's PortalForcer (radius 16), and only widen the search when
+        // nothing usable is nearby. Scanning the full 128-block radius every time forced ~290 Aether chunks to
+        // generate at once, freezing the server for several seconds on each new portal.
+        for (int radius : SEARCH_RADII) {
+        for (BlockPos.MutableBlockPos mutablePos1 : BlockPos.spiralAround(pos, radius, Direction.EAST, Direction.SOUTH)) {
             int j = Math.min(i, this.level.getHeight(Heightmap.Types.MOTION_BLOCKING, mutablePos1.getX(), mutablePos1.getZ()));
             if (worldBorder.isWithinBounds(mutablePos1) && worldBorder.isWithinBounds(mutablePos1.move(direction, 1))) {
                 mutablePos1.move(direction.getOpposite(), 1);
@@ -97,6 +103,10 @@ public class AetherPortalForcer {
                 }
             }
             if (d0 != -1.0 && d1 != -1.0) {
+                break;
+            }
+        }
+            if (d0 != -1.0 || d1 != -1.0) {
                 break;
             }
         }
@@ -142,7 +152,7 @@ public class AetherPortalForcer {
                 }
             }
 
-            BlockState blockState = AetherIIBlocks.AETHER_PORTAL.get().defaultBlockState().setValue(AetherPortalBlock.AXIS, axis);
+            BlockState blockState = AetherIIBlocks.AETHER_PORTAL.defaultBlockState().setValue(AetherPortalBlock.AXIS, axis);
             for (int k2 = 0; k2 < 2; ++k2) {
                 for (int l2 = 0; l2 < 3; ++l2) {
                     mutablePos.setWithOffset(blockPos, k2 * direction.getStepX(), l2, k2 * direction.getStepZ());

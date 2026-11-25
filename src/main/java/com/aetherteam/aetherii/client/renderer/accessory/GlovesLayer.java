@@ -1,5 +1,6 @@
 package com.aetherteam.aetherii.client.renderer.accessory;
 
+import com.aetherteam.aetherii.client.AetherIIClientExtensions;
 import com.aetherteam.aetherii.client.AetherIIAtlases;
 import com.aetherteam.aetherii.client.renderer.AetherIIModelLayers;
 import com.aetherteam.aetherii.client.renderer.AetherIIRenderers;
@@ -32,7 +33,6 @@ import net.minecraft.util.Util;
 import net.minecraft.world.entity.HumanoidArm;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
-import net.neoforged.neoforge.client.extensions.common.IClientItemExtensions;
 import org.joml.Vector3f;
 
 import java.util.function.Function;
@@ -56,7 +56,7 @@ public class GlovesLayer<S extends LivingEntityRenderState, M extends EntityMode
     @Override
     public void submit(PoseStack poseStack, SubmitNodeCollector submitNodeCollector, int packedLight, S s, float v, float v1) {
         if (s instanceof AvatarRenderState avatarRenderState) {
-            ItemStack stack = avatarRenderState.getRenderData(AetherIIRenderers.HANDWEAR_EQUIPMENT_KEY);
+            ItemStack stack = avatarRenderState.getData(AetherIIRenderers.HANDWEAR_EQUIPMENT_KEY);
             if (stack != null && !stack.isEmpty()) {
                 Identifier id = BuiltInRegistries.ITEM.getKey(stack.getItem());
                 Identifier texture = Identifier.fromNamespaceAndPath(id.getNamespace(), "textures/entity/equipment/humanoid_gloves/" + id.getPath() + ".png");
@@ -86,12 +86,10 @@ public class GlovesLayer<S extends LivingEntityRenderState, M extends EntityMode
                         OverlayTexture.NO_OVERLAY,
                         -1,
                         null,
-                        s.outlineColor,
-                        null
+                        s.outlineColor
                 );
 
-                IClientItemExtensions extensions = IClientItemExtensions.of(stack);
-                int color = extensions.getDefaultDyeColor(stack);
+                int color = AetherIIClientExtensions.getDefaultDyeColor(stack);
                 if (color != 0) {
                     submitNodeCollector.order(nextOrder++).submitModel(
                             glovesModel,
@@ -102,8 +100,7 @@ public class GlovesLayer<S extends LivingEntityRenderState, M extends EntityMode
                             OverlayTexture.NO_OVERLAY,
                             ARGB.opaque(color),
                             null,
-                            s.outlineColor,
-                            null
+                            s.outlineColor
                     );
                 }
 
@@ -119,8 +116,7 @@ public class GlovesLayer<S extends LivingEntityRenderState, M extends EntityMode
                             OverlayTexture.NO_OVERLAY,
                             -1,
                             sprite,
-                            s.outlineColor,
-                            null
+                            s.outlineColor
                     );
                 }
             }
@@ -164,8 +160,7 @@ public class GlovesLayer<S extends LivingEntityRenderState, M extends EntityMode
                         null
                 );
 
-        IClientItemExtensions extensions = IClientItemExtensions.of(stack);
-        int color = extensions.getDefaultDyeColor(stack);
+        int color = AetherIIClientExtensions.getDefaultDyeColor(stack);
         if (color != 0) {
             collector.order(nextOrder++)
                     .submitModelPart(
@@ -176,7 +171,7 @@ public class GlovesLayer<S extends LivingEntityRenderState, M extends EntityMode
                             OverlayTexture.NO_OVERLAY,
                             null,
                             ARGB.opaque(color),
-                            null
+                            0
                     );
         }
 
