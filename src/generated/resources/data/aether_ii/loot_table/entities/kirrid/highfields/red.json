@@ -2,15 +2,13 @@
   "type": "minecraft:entity",
   "pools": [
     {
-      "bonus_rolls": 0.0,
       "entries": [
         {
           "type": "minecraft:item",
           "name": "aether_ii:red_cloudwool"
         }
       ],
-      "rolls": 1.0
+      "rolls": 1
     }
-  ],
-  "random_sequence": "aether_ii:entities/kirrid/highfields/red"
+  ]
 }

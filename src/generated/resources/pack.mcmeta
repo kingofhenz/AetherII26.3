@@ -4,9 +4,12 @@
       "translate": "pack.aether_ii.mod.description"
     },
     "max_format": [
-      84,
-      0
+      97,
+      1
     ],
-    "min_format": 84
+    "min_format": [
+      97,
+      1
+    ]
   }
 }
